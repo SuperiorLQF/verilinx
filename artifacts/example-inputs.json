@@ -1,0 +1,8 @@
+{
+  "lists/subsys.f": "../rtl/processor.sv\n../rtl/array_pass.sv\n",
+  "project.f": "# Ordered single compilation unit; preserve this hierarchy.\nrtl/define_subsys.v\n-F lists/subsys.f\nrtl/undef_subsys.v\n",
+  "rtl/array_pass.sv": "module array_pass #(parameter int WIDTH=8, parameter int LANES=6)(\n    input logic [WIDTH-1:0] data_in [0:LANES-1],\n    output logic [WIDTH-1:0] data_out [0:LANES-1]\n);\n    assign data_out = data_in;\nendmodule\n",
+  "rtl/define_subsys.v": "`define SUBSYS_WIDTH 8\n",
+  "rtl/processor.sv": "module processor #(\n    parameter int WIDTH = `SUBSYS_WIDTH,\n    parameter int OFFSET = 1\n) (\n    input logic clk,\n    input logic rst_n,\n    input logic [WIDTH-1:0] data_in,\n    output logic [WIDTH-1:0] data_out\n);\n    always_ff @(posedge clk or negedge rst_n)\n        if (!rst_n) data_out <= '0;\n        else data_out <= data_in + WIDTH'(OFFSET);\nendmodule\n",
+  "rtl/undef_subsys.v": "`undef SUBSYS_WIDTH\n"
+}

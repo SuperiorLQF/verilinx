@@ -1,0 +1,1 @@
+`define SUBSYS_WIDTH 8

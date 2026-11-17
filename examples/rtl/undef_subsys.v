@@ -1,0 +1,1 @@
+`undef SUBSYS_WIDTH
