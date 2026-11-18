@@ -19,9 +19,15 @@ export function canMove(s,id,dx,dy){const p=s.pieces.find(p=>p.id===id);if(!p||(
  for(let i=1;i<=steps;i++)for(const [x,y]of cells(p)){const a=x+Math.sign(dx)*i,b=y+Math.sign(dy)*i;if(!allowed(a,b)||occupied.has(`${a},${b}`))return false;}
  return true;}
 export function move(s,id,dx,dy){if(!canMove(s,id,dx,dy))return false;const p=s.pieces.find(p=>p.id===id);p.x+=dx;p.y+=dy;s.moves++;return true;}
-export function receiver(s,side){const col=side===0?1:4;return s.pieces.flatMap(p=>cells(p).filter(([x])=>x===col).map(([,y])=>({p,y}))).sort((a,b)=>a.y-b.y)[0]||null;}
+// A reservoir spans two columns. Only a container cell directly against its
+// bottom edge (board row zero) can open the outlet; air gaps never transmit sand.
+export function receiver(s,side){
+ const columns=side===0?[1,2]:[3,4];
+ const touching=s.pieces.flatMap(p=>{const contact=cells(p).find(([x,y])=>y===0&&columns.includes(x));return contact?[{p,x:contact[0],y:0}]:[];});
+ return touching.find(r=>r.p.color===s.queues[side][0])||touching[0]||null;
+}
 export function ready(s,side){const r=receiver(s,side);return r&&r.p.color===s.queues[side][0]?r:null;}
 export function finish(s,id,side){const r=ready(s,side);if(!r||r.p.id!==id)return false;s.pieces=s.pieces.filter(p=>p.id!==id);s.queues[side].shift();s.cleared++;return true;}
-export function legalMoves(s){return s.pieces.flatMap(p=>[[1,0],[-1,0],[0,1],[0,-1]].filter(([dx,dy])=>canMove(s,p.id,dx,dy)).map(([dx,dy])=>({id:p.id,dx,dy})));}
+export function legalMoves(s){const result=[];for(const p of s.pieces)for(const [dx,dy]of [[1,0],[-1,0],[0,1],[0,-1]])for(let distance=1;distance<=8;distance++){if(!canMove(s,p.id,dx*distance,dy*distance))break;result.push({id:p.id,dx:dx*distance,dy:dy*distance});}return result;}
 export function key(s){return JSON.stringify([s.pieces.map(p=>[p.id,p.x,p.y]),s.queues]);}
 export function settle(s){const removed=[];let changed=true;while(changed){changed=false;for(let side=0;side<2;side++){const r=ready(s,side);if(r){removed.push(r.p.id);finish(s,r.p.id,side);changed=true;}}}return removed;}

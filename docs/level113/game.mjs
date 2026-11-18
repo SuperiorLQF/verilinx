@@ -1,4 +1,4 @@
-import {COLORS,SHAPES,fresh,allowed,cells,canMove,move,receiver,ready,finish,settle,key,legalMoves} from './core.mjs';
+import {COLORS,SHAPES,fresh,allowed,cells,canMove,move,receiver,ready,finish,settle,key,legalMoves} from './core.mjs?v=contact-2';
 const $=id=>document.getElementById(id),canvas=$('board'),ctx=canvas.getContext('2d'),C=80,X=60,Y=300;
 let state=fresh(),history=[],selected=null,drag=null,started=false,remaining=180,last=performance.now(),paused=false,ended=false,particles=[],flashes=[],sound=false,audio,toastTimer,hintCell=null,hintUntil=0;
 const modal=$('modal'),initialBody=$('modalBody').innerHTML;
@@ -8,7 +8,7 @@ function toast(text){$('announcement').textContent=text;clearTimeout(toastTimer)
 function tone(freq=540){if(!sound)return;try{audio ||= new(window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.type='sine';o.frequency.setValueAtTime(freq,audio.currentTime);g.gain.setValueAtTime(.045,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.14);o.start();o.stop(audio.currentTime+.15);}catch{}}
 function remember(){history.push({state:copy(state),remaining});if(history.length>150)history.shift();}
 function refresh(){ $('progress').textContent=`已填满 ${state.cleared} / 15`;$('moves').textContent=`${state.moves} 步`;$('undo').disabled=!history.length;}
-function reset(){state=fresh();history=[];selected=null;drag=null;particles=[];flashes=[];remaining=180;ended=false;hintCell=null;refresh();toast('两股沙流就绪，先观察下一种颜色。');}
+function reset(){state=fresh();history=[];selected=null;drag=null;particles=[];flashes=[];remaining=180;ended=false;hintCell=null;refresh();toast('贴住上方同色色仓的底边才能接沙，中间不能隔空格。');}
 function showHelp(first=false){paused=true;$('modalTitle').textContent='把颜色，归还给沙子。';$('modalBody').innerHTML=initialBody;$('play').textContent=first?'开始挑战 →':'继续挑战 →';$('close').hidden=true;modal.showModal();}
 $('help').onclick=()=>showHelp(!started);
 $('play').onclick=()=>{if(ended){reset();}started=true;paused=false;last=performance.now();modal.close();};
@@ -17,7 +17,7 @@ $('restart').onclick=()=>{reset();started=true;paused=false;};
 $('undo').onclick=()=>{const prev=history.pop();if(!prev){toast('还没有可以撤回的操作。');return;}state=prev.state;remaining=prev.remaining;selected=null;drag=null;ended=false;particles=[];hintCell=null;refresh();toast('已撤回到上一步，沙流状态也已恢复。');};
 $('time').onclick=()=>{if(ended){toast('点击「再玩一次」重新挑战。');return;}remaining+=60;tone(700);toast('已增加 60 秒，慢慢来。');};
 $('sound').onclick=()=>{sound=!sound;$('sound').textContent=`音效 ${sound?'开':'关'}`;tone();};
-$('hint').onclick=()=>{if(ended)return;if([0,1].some(i=>ready(state,i))){toast('同色沙正在填充，等容器消失后再移动。');return;}const solution=nextHint();if(solution){selected=solution.id;hintCell=solution;hintUntil=performance.now()+5500;toast(`发光容器向${solution.dx>0?'右':solution.dx<0?'左':solution.dy>0?'下':'上'}移动一格。`);}else toast('暂未找到短路径；可以撤回几步，或重开尝试。');};
+$('hint').onclick=()=>{if(ended)return;if([0,1].some(i=>ready(state,i))){toast('容器已贴住同色色仓，正在填充。');return;}const solution=nextHint();if(solution){selected=solution.id;hintCell=solution;hintUntil=performance.now()+5500;toast(`发光容器向${solution.dx>0?'右':solution.dx<0?'左':solution.dy>0?'下':'上'}移动 ${Math.max(Math.abs(solution.dx),Math.abs(solution.dy))} 格。`);}else toast('暂未找到短路径；可以撤回几步，或重开尝试。');};
 function nextHint(){const root=copy(state);settle(root);const size=root.pieces.length,q=[{s:root,first:null}],seen=new Set([key(root)]);let head=0;while(head<q.length&&head<7000){const {s,first}=q[head++];for(const m of legalMoves(s)){const next=copy(s);move(next,m.id,m.dx,m.dy);settle(next);const f=first||m;if(next.pieces.length<size)return f;const k=key(next);if(!seen.has(k)){seen.add(k);q.push({s:next,first:f});}}}return null;}
 function attempt(id,dx,dy){if(!started||paused||ended)return false;if(canMove(state,id,dx,dy)){remember();move(state,id,dx,dy);selected=id;hintCell=null;refresh();tone(350);return true;}tone(140);toast('这里被挡住了；↕ 容器只能上下移动。');return false;}
 function local(e){const r=canvas.getBoundingClientRect();return {x:(e.clientX-r.left)*600/r.width,y:(e.clientY-r.top)*1100/r.height};}
@@ -65,9 +65,9 @@ function draw(time){ctx.clearRect(0,0,600,1100);
  ctx.save();ctx.shadowColor='#99afff80';ctx.shadowBlur=8;ctx.shadowOffsetY=8;ctx.fillStyle='#bdc7ff';for(let y=0;y<9;y++)for(let x=0;x<6;x++)if(allowed(x,y))round(X+x*C-13,Y+y*C-13,C+26,C+26,12,'#dae4ff');ctx.restore();
  ctx.fillStyle='#2c2357';for(let y=0;y<9;y++)for(let x=0;x<6;x++)if(allowed(x,y))ctx.fillRect(X+x*C-2,Y+y*C-2,C+4,C+4);
  for(let y=0;y<9;y++)for(let x=0;x<6;x++)if(allowed(x,y)){const g=ctx.createLinearGradient(0,Y+y*C,0,Y+(y+1)*C);g.addColorStop(0,'#382d67');g.addColorStop(1,'#262044');round(X+x*C+2,Y+y*C+2,C-4,C-4,6,g,'#55497655',2);}
- // Outlet rays end at the first physical container, including wrong colors.
- for(let side=0;side<2;side++){const r=receiver(state,side),next=state.queues[side][0],col=side===0?1:4;const cx=X+col*C+C/2,top=Y-15,bottom=r?Y+r.y*C+8:Y+9*C;const flowing=ready(state,side)&&started&&!paused&&!drag&&!ended;
- if(next){ctx.save();ctx.strokeStyle=COLORS[next]+(flowing?'a0':'35');ctx.lineWidth=flowing?5:2;ctx.setLineDash(flowing?[]:[4,8]);ctx.beginPath();ctx.moveTo(cx,top);ctx.lineTo(cx,bottom);ctx.stroke();ctx.restore();if(flowing&&!reduce){for(let k=0;k<16;k++){const yy=top+((time*.36+k*29)%(Math.max(1,bottom-top)));ctx.fillStyle=k%3?'#ffffffc0':COLORS[next];ctx.fillRect(cx-8+((k*7)%14),yy,3,5);}}}
+ // The outlet remains sealed unless a matching cell touches the reservoir.
+ for(let side=0;side<2;side++){const r=ready(state,side),flowing=r&&started&&!paused&&!drag&&!ended;
+ if(flowing){const cx=X+r.x*C+C/2,top=Y-15,bottom=Y+8;ctx.save();ctx.strokeStyle=COLORS[r.p.color]+'c0';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(cx,top);ctx.lineTo(cx,bottom);ctx.stroke();if(!reduce){for(let k=0;k<5;k++){const yy=top+((time*.16+k*5)%(bottom-top));ctx.fillStyle=k%3?'#ffffffc0':COLORS[r.p.color];ctx.fillRect(cx-7+((k*7)%12),yy,3,4);}}ctx.restore();}
  }
  for(const p of state.pieces)piece(p,time);
  if(drag){const p=state.pieces.find(p=>p.id===drag.id);if(p){const dx=drag.pos.x-drag.start.x,dy=drag.pos.y-drag.start.y;const mx=p.axis==='v'?0:Math.abs(dx)>Math.abs(dy)?Math.round(dx/C):0,my=p.axis==='v'||Math.abs(dy)>=Math.abs(dx)?Math.round(dy/C):0;if(mx||my){ctx.save();ctx.globalAlpha=.4;const ghost={...p,x:p.x+mx,y:p.y+my};shapeOutline(ghost);ctx.strokeStyle=canMove(state,p.id,mx,my)?'#c7ffcf':'#ff7d95';ctx.lineWidth=6;ctx.stroke();ctx.restore();}}}
