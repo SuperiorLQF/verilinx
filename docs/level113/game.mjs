@@ -1,13 +1,14 @@
-import {COLORS,SHAPES,fresh,allowed,cells,canMove,move,receiver,ready,finish,settle,key,legalMoves} from './core.mjs?v=contact-2';
+import {COLORS,SHAPES,sourceStock,sourceColors,fresh,allowed,cells,canMove,move,receiver,ready,finish,settle,key,legalMoves} from './core.mjs?v=colors-3';
 const $=id=>document.getElementById(id),canvas=$('board'),ctx=canvas.getContext('2d'),C=80,X=60,Y=300;
 let state=fresh(),history=[],selected=null,drag=null,started=false,remaining=180,last=performance.now(),paused=false,ended=false,particles=[],flashes=[],sound=false,audio,toastTimer,hintCell=null,hintUntil=0;
 const modal=$('modal'),initialBody=$('modalBody').innerHTML;
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const copy=x=>structuredClone(x);
+const colorNames={blue:'蓝色',green:'绿色',pink:'粉色',purple:'紫色',cyan:'青色'};
 function toast(text){$('announcement').textContent=text;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('announcement').textContent='',4200);}
 function tone(freq=540){if(!sound)return;try{audio ||= new(window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.type='sine';o.frequency.setValueAtTime(freq,audio.currentTime);g.gain.setValueAtTime(.045,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.14);o.start();o.stop(audio.currentTime+.15);}catch{}}
 function remember(){history.push({state:copy(state),remaining});if(history.length>150)history.shift();}
-function refresh(){ $('progress').textContent=`已填满 ${state.cleared} / 15`;$('moves').textContent=`${state.moves} 步`;$('undo').disabled=!history.length;}
+function refresh(){ $('sources').textContent=`左仓：${sourceColors(state,0).map(c=>colorNames[c]).join(' + ')||'已空'}　·　右仓：${sourceColors(state,1).map(c=>colorNames[c]).join(' + ')||'已空'}`; $('progress').textContent=`已填满 ${state.cleared} / 15`;$('moves').textContent=`${state.moves} 步`;$('undo').disabled=!history.length;}
 function reset(){state=fresh();history=[];selected=null;drag=null;particles=[];flashes=[];remaining=180;ended=false;hintCell=null;refresh();toast('贴住上方同色色仓的底边才能接沙，中间不能隔空格。');}
 function showHelp(first=false){paused=true;$('modalTitle').textContent='把颜色，归还给沙子。';$('modalBody').innerHTML=initialBody;$('play').textContent=first?'开始挑战 →':'继续挑战 →';$('close').hidden=true;modal.showModal();}
 $('help').onclick=()=>showHelp(!started);
@@ -41,7 +42,7 @@ function shapeOutline(p){const set=new Set(SHAPES[p.shape].map(([a,b])=>`${a},${
 function piece(p,time){const color=COLORS[p.color],shape=SHAPES[p.shape],x=X+p.x*C,y=Y+p.y*C,w=(Math.max(...shape.map(c=>c[0]))+1)*C,h=(Math.max(...shape.map(c=>c[1]))+1)*C;
  ctx.save();if(p.shape==='la'||p.shape==='lb'){
  shapeOutline(p);ctx.lineJoin='round';ctx.lineWidth=13;ctx.strokeStyle='#e7f732';ctx.shadowColor='#ddeb20';ctx.shadowBlur=7;ctx.stroke();ctx.shadowBlur=0;
- pathShape(p);ctx.fillStyle=color;ctx.fill();ctx.save();pathShape(p);ctx.clip();round(x+10,y+10,w-20,h-20,10,'#13568b');ctx.restore();shapeOutline(p);ctx.strokeStyle=color;ctx.lineWidth=8;ctx.stroke();
+ pathShape(p);ctx.fillStyle=color;ctx.fill();ctx.save();pathShape(p);ctx.clip();round(x+10,y+10,w-20,h-20,10,'#13568b');ctx.restore();shapeOutline(p);ctx.strokeStyle='#27dcf1';ctx.lineWidth=8;ctx.stroke();
  }else{
  ctx.shadowColor=color+'70';ctx.shadowBlur=12;ctx.shadowOffsetY=3;const g=ctx.createLinearGradient(x,y,x+w,y+h);g.addColorStop(0,color);g.addColorStop(.48,color);g.addColorStop(1,'#542777');round(x+3,y+3,w-6,h-6,9,g,'#ffffff65',2);ctx.shadowBlur=0;ctx.shadowOffsetY=0;
  round(x+13,y+22,w-26,h-34,5,'#25184499',color+'88',2);round(x+15,y+9,w-30,15,5,'#ffffff21');
@@ -53,11 +54,13 @@ function piece(p,time){const color=COLORS[p.color],shape=SHAPES[p.shape],x=X+p.x
  if(hintCell?.id===p.id&&time<hintUntil){text(hintCell.dx>0?'→':hintCell.dx<0?'←':hintCell.dy>0?'↓':'↑',x+w/2,y+h/2+17,49,'#fff','center');}
  ctx.restore();}
 function reservoir(side,time){const sx=side===0?X+C:X+3*C,sy=142,w=2*C,h=139;round(sx-8,sy-8,w+16,h+16,14,'#e0dcff','#aeb5ff',3);round(sx,sy,w,h,7,'#261a54','#a47ddf',5);
- const next=state.queues[side][0],col=COLORS[next]||'#626090';ctx.save();round(sx+6,sy+6,w-12,h-12,4,null);ctx.clip();const gr=ctx.createLinearGradient(sx,sy,sx+w,sy+h);gr.addColorStop(0,col);gr.addColorStop(1,'#35235e');ctx.fillStyle=gr;ctx.fillRect(sx,sy,w,h);
- for(let k=0;k<190;k++){const a=(k*39.71)%w,b=(k*21.37+time*.012)%h;ctx.fillStyle=k%3===0?'#ffffff4d':'#150e2633';ctx.fillRect(sx+a,sy+b,4+(k%3),3);}
- ctx.restore();text(next?'出沙口':'已完成',sx+12,sy+23,12,'#fff');
- for(let i=1;i<Math.min(6,state.queues[side].length);i++){const cc=COLORS[state.queues[side][i]];round(sx+9+(i-1)*27,sy+h-23,21,13,4,cc,'#ffffff55');}
- const cx=sx+w/2;round(cx-25,-20,50,151,9,'#ffffff1e','#d6c3f985',3);ctx.save();round(cx-21,0,42,130,0,null);ctx.clip();ctx.fillStyle=col;ctx.globalAlpha=.6;ctx.fillRect(cx-20,-10,40,150);ctx.globalAlpha=1;for(let k=0;k<35;k++){ctx.fillStyle=k%2?'#fff5':col;ctx.fillRect(cx-17+(k*17)%34,((k*27+time*.05)%140)-10,4,8);}ctx.restore();}
+ const colors=sourceColors(state,side),pending=state.queues[side].slice(sourceStock(state,side).length),pipeColor=COLORS[pending[0]]||'#626090';
+ ctx.save();round(sx+6,sy+6,w-12,h-12,4,null);ctx.clip();ctx.fillStyle='#30204b';ctx.fillRect(sx,sy,w,h);
+ // Pixel grains depict the actual current sand, not a preview of future supply.
+ // The initial left bin has a blue/green diagonal interface, as in the reference.
+ for(let gy=0;gy<h;gy+=4)for(let gx=0;gx<w;gx+=4){const k=(gx/4)*97+(gy/4)*31,noise=Math.sin(k*12.9898)*.5;const second=colors.length>1&&(gx/w+gy/h+noise*.12>1);const color=colors[second?1:0];ctx.fillStyle=COLORS[color]||'#3d3261';ctx.fillRect(sx+gx,sy+gy,4,4);ctx.fillStyle=k%7===0?'#ffffff40':k%3===0?'#160e2528':'#ffffff08';ctx.fillRect(sx+gx,sy+gy,4,4);}
+ ctx.restore();text(colors.length?'现有沙子':'已完成',sx+12,sy+23,12,'#fff');
+ const cx=sx+w/2;round(cx-25,-20,50,151,9,'#ffffff1e','#d6c3f985',3);ctx.save();round(cx-21,0,42,130,0,null);ctx.clip();ctx.fillStyle=pipeColor;ctx.globalAlpha=.75;ctx.fillRect(cx-20,-10,40,150);ctx.globalAlpha=1;for(let k=0;k<35;k++){ctx.fillStyle=k%2?'#fff5':pipeColor;ctx.fillRect(cx-17+(k*17)%34,((k*27+time*.05)%140)-10,4,8);}ctx.restore();}
 function draw(time){ctx.clearRect(0,0,600,1100);
  reservoir(0,time);reservoir(1,time);
  round(200,40,200,72,32,'#4c226f','#d4a1fb88',3);round(211,49,178,53,25,'#281747');const minutes=Math.floor(remaining/60),seconds=Math.floor(remaining%60);text(`${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`,300,88,40,remaining<30?'#ff707c':'#f2dcff','center',900);

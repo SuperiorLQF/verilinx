@@ -1,14 +1,16 @@
 export const COLORS={cyan:'#27dcf1',purple:'#a64cf7',pink:'#f35be7',green:'#18ee68',blue:'#3ca8ff'};
 export const SHAPES={square:[[0,0],[1,0],[0,1],[1,1]],single:[[0,0]],tall:[[0,0],[0,1]],la:[[0,0],[1,0],[0,1]],lb:[[1,0],[0,1],[1,1]]};
 export const INITIAL=[
- ['c1','cyan',1,0,'la'],['c2','cyan',1,1,'lb'],['p1','purple',4,0,'single'],
+ ['c1','blue',1,0,'la'],['c2','blue',1,1,'lb'],['p1','purple',4,0,'single'],
  ['p2','purple',0,1,'single'],['m1','pink',3,1,'square','v'],['p3','purple',5,1,'single'],
  ['p4','purple',1,3,'square','v'],['b1','blue',0,4,'single'],['b2','blue',5,4,'single'],
  ['g1','green',1,5,'square'],['g2','green',3,5,'square'],
  ['b3','blue',0,7,'tall'],['p5','purple',1,7,'square','v'],['m2','pink',3,7,'square','v'],['b4','blue',5,7,'tall']
 ];
-// Each queue has one dose for each container in the reference solution.
-export const QUEUES=[['cyan','purple','cyan','green','purple','purple','blue','blue'],['purple','pink','blue','green','pink','purple','blue']];
+// A reservoir holds finite runs of up to CAPACITY distinct colors. A color
+// remains available until its current stock is exhausted; later runs stay in pipes.
+export const CAPACITY=[2,1];
+export const QUEUES=[['blue','blue','green','purple','purple','purple','blue','blue'],['pink','blue','green','pink','purple','purple','blue']];
 export function fresh(){return {pieces:INITIAL.map(([id,color,x,y,shape,axis])=>({id,color,x,y,shape,axis:axis||'both',fill:0})),queues:QUEUES.map(q=>[...q]),moves:0,cleared:0};}
 export function allowed(x,y){return Number.isInteger(x)&&Number.isInteger(y)&&y>=0&&y<9&&((x>=1&&x<=4)||((x===0||x===5)&&[1,4,5,7,8].includes(y)));}
 export function cells(p){return SHAPES[p.shape].map(([x,y])=>[p.x+x,p.y+y]);}
@@ -21,13 +23,15 @@ export function canMove(s,id,dx,dy){const p=s.pieces.find(p=>p.id===id);if(!p||(
 export function move(s,id,dx,dy){if(!canMove(s,id,dx,dy))return false;const p=s.pieces.find(p=>p.id===id);p.x+=dx;p.y+=dy;s.moves++;return true;}
 // A reservoir spans two columns. Only a container cell directly against its
 // bottom edge (board row zero) can open the outlet; air gaps never transmit sand.
+export function sourceStock(s,side){const colors=new Set(),stock=[];for(const color of s.queues[side]){if(!colors.has(color)&&colors.size===CAPACITY[side])break;colors.add(color);stock.push(color);}return stock;}
+export function sourceColors(s,side){return [...new Set(sourceStock(s,side))];}
 export function receiver(s,side){
  const columns=side===0?[1,2]:[3,4];
  const touching=s.pieces.flatMap(p=>{const contact=cells(p).find(([x,y])=>y===0&&columns.includes(x));return contact?[{p,x:contact[0],y:0}]:[];});
- return touching.find(r=>r.p.color===s.queues[side][0])||touching[0]||null;
+ return touching.find(r=>sourceColors(s,side).includes(r.p.color))||touching[0]||null;
 }
-export function ready(s,side){const r=receiver(s,side);return r&&r.p.color===s.queues[side][0]?r:null;}
-export function finish(s,id,side){const r=ready(s,side);if(!r||r.p.id!==id)return false;s.pieces=s.pieces.filter(p=>p.id!==id);s.queues[side].shift();s.cleared++;return true;}
+export function ready(s,side){const r=receiver(s,side);return r&&sourceColors(s,side).includes(r.p.color)?r:null;}
+export function finish(s,id,side){const r=ready(s,side);if(!r||r.p.id!==id)return false;s.pieces=s.pieces.filter(p=>p.id!==id);s.queues[side].splice(s.queues[side].indexOf(r.p.color),1);s.cleared++;return true;}
 export function legalMoves(s){const result=[];for(const p of s.pieces)for(const [dx,dy]of [[1,0],[-1,0],[0,1],[0,-1]])for(let distance=1;distance<=8;distance++){if(!canMove(s,p.id,dx*distance,dy*distance))break;result.push({id:p.id,dx:dx*distance,dy:dy*distance});}return result;}
 export function key(s){return JSON.stringify([s.pieces.map(p=>[p.id,p.x,p.y]),s.queues]);}
 export function settle(s){const removed=[];let changed=true;while(changed){changed=false;for(let side=0;side<2;side++){const r=ready(s,side);if(r){removed.push(r.p.id);finish(s,r.p.id,side);changed=true;}}}return removed;}
