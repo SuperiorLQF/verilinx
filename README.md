@@ -10,25 +10,42 @@ Linux 独立包内置 Python 和 slang，无需安装 Python、Node.js 或 Vivad
 
 基于 slang 的 SystemVerilog 模块连接 demo。单入口 filelist、顶层参数、generate、信号拼拆，以及「顶层文件即工程」。
 
-## 启动
+## 克隆源码与开发
 
-需要 Python 3.12+、Node.js 20.19+。在仓库根目录执行：
+经常修改代码请克隆 **main** 分支。需要 Git、Python 3.12+、Node.js 20.19+ 和 npm。以下以 Linux 为例：
 
 ```sh
-python -m venv .venv
-.venv/bin/pip install -r requirements-dev.txt
+git clone --branch main https://github.com/SuperiorLQF/verilinx.git
+cd verilinx
+git switch -c dev/my-work
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
 npm --prefix frontend ci
-npm --prefix frontend run build
-.venv/bin/python -m uvicorn backend.main:app --host 0.0.0.0 --port 3000
 ```
 
-- React 图形编辑器：`http://localhost:3000/`
-- HTML 移动检视版：`http://localhost:3000/review/`
-- 交互式 API 文档：`http://localhost:3000/docs`
+终端一，在仓库根目录启动后端，修改 backend 自动重启：
+
+```sh
+.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 3000 --reload --reload-dir backend
+```
+
+终端二，在仓库根目录启动前端，修改 frontend/src 热更新：
+
+```sh
+npm --prefix frontend run dev -- --port 5173 --strictPort
+```
+
+- 开发中的 React 画布：`http://127.0.0.1:5173/`
+- HTML 检视版：`http://127.0.0.1:5173/review/`
+- 后端 API 文档：`http://127.0.0.1:3000/docs`
 
 两个前端共用同一 API，编辑状态各自独立，可以用顶层工程文件互换设计。移动端需访问主机可达或已转发的地址；手机的 localhost 是手机自身。
 
-开发热更新：同一后端保持运行，执行 `npm --prefix frontend run dev`，Vite 转发 API 到 3000 端口。
+源码修改后，先在自己的开发分支提交，再执行 `git fetch origin` 和 `git merge origin/main` 合并上游更新。没有本地开发提交且工作区干净的 main 分支，可用 `git pull --ff-only`。requirements 或 package-lock 改变后才需要重新安装对应依赖。
+
+Git 不跟踪 frontend/dist。要用 3000 单端口运行构建版，先执行 `npm --prefix frontend run build`，再启动后端；日常前端开发请访问 5173。
+
+完整的 HTTPS/SSH 克隆、跳过发行包的精简克隆、更新合并和 ZIP 迁移步骤见 [源码开发指南](docs/SOURCE_DEVELOPMENT.md)。`linux-release` 仅含发行包，开发请选择 `main`。
 
 ## 先试六路示例
 

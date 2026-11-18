@@ -1,11 +1,21 @@
 # 下载 0.1.4
 
+- **持续开发：[Git 克隆与热更新指南](../docs/SOURCE_DEVELOPMENT.md)**，源码位于 main 分支。
 - [Linux x86_64 独立运行包（约 20 MB）](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.4.tar.gz)
 - [Linux 完整运行步骤](../docs/LINUX.md)
 - [已有安装：仅更新前端](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-routing-update-0.1.4.zip)
 - [含已构建前端的源码完整包](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-demo-0.1.4.zip)
 - [最新完整源码包固定地址](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-demo.zip)
 - [发行与下载页面](https://superiorlqf.github.io/verilinx/)
+
+开发者可以直接克隆，无需反复下载安装包：
+
+```sh
+git clone --branch main https://github.com/SuperiorLQF/verilinx.git
+cd verilinx
+```
+
+修改前建议建立自己的开发分支。开发时用 Python 启动 3000 后端、Vite 启动 5173 前端，保存源码后自动更新；具体安装、启动和保留本地修改的同步方法见上方指南。
 
 独立运行包需要 x86_64 Linux / glibc 2.31+（Ubuntu 20.04+、Debian 11+），无需安装 Python、Node.js 或 slang。解压后运行：
 
