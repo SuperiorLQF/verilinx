@@ -1,12 +1,12 @@
-# Linux 独立运行版 0.1.2
+# Linux 独立运行版 0.1.3
 
 支持 x86_64、glibc 2.31 或更新的 Linux，例如 Debian 11+、Ubuntu 20.04+。不支持 ARM、Alpine/musl 或 Windows。内置 Python、pyslang 12.1.0、后端及两个前端，无需安装 Python、Node.js、slang 或 Vivado。
 
 ## 下载、解压、启动
 
 ```sh
-curl -fL https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.2.tar.gz -o verilinx-linux-x86_64-0.1.2.tar.gz
-tar -xzf verilinx-linux-x86_64-0.1.2.tar.gz
+curl -fL https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.3.tar.gz -o verilinx-linux-x86_64-0.1.3.tar.gz
+tar -xzf verilinx-linux-x86_64-0.1.3.tar.gz
 cd verilinx-linux-x86_64
 ./verilinx
 ```
@@ -25,7 +25,7 @@ cd verilinx-linux-x86_64
 
 这会实际运行打包的 slang 工作进程，加载六路示例，导出和恢复工程，并检查端口布局和两个前端资源。成功时输出 `"ok": true`，随后退出。
 
-下载目录同时提供 `.sha256` 文件。在下载包所在目录执行 `sha256sum -c verilinx-linux-x86_64-0.1.2.tar.gz.sha256` 可校验完整性。
+下载目录同时提供 `.sha256` 文件。在下载包所在目录执行 `sha256sum -c verilinx-linux-x86_64-0.1.3.tar.gz.sha256` 可校验完整性。
 
 ## 接线和端口布局
 
@@ -34,6 +34,16 @@ cd verilinx-linux-x86_64
 3. 按 P 或点击「端口布局」，拖动箭头到模块任意一边，按 Esc 退出。普通模式可用 Shift+拖动箭头移动位置。聚焦箭头后用 Shift+方向键沿周界微调。
 4. 输入箭头始终指向模块，输出箭头始终离开模块。移动位置不改变网络，连线端点同步跟随。
 5. 导出顶层 `.sv` 保存工程；下次「打开工程」恢复源文件、网络、位置和端口布局。
+
+## 框选、删除和对齐
+
+画布空白处按住左键拖出矩形，碰到的节点会选中。Shift+单击增减选中项，Ctrl/⌘+A 或「全选」选中全部节点和连线。Delete、Backspace 或「删除选中」批量删除节点及关联连线。
+
+选中两个或以上节点后，上方工具栏提供左对齐、右对齐、水平居中、顶端、底端和垂直居中对齐。以所选节点的整体包围框为基准，使用实际节点尺寸计算。窄屏显示「对齐…」菜单。
+
+「自动对齐」默认开启，拖动接近其他节点的边缘或中心时显示粉色辅助线并吸附，容差为 7 个屏幕像素，不随缩放改变。多选整体拖动保持相对间距；Alt 可临时关闭吸附。按 Space+拖动平移画布，或关闭「框选」后直接拖动画布。
+
+这些布局操作仅影响主画布，HTML 检视版继续使用表单和下拉框编辑网络。导出的顶层工程包含最终节点位置。
 
 ## 发行方式
 
