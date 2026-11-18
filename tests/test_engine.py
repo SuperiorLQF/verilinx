@@ -105,8 +105,8 @@ def test_shapes_and_bit_order():
 def test_adapter_mappings_use_msb_first(example):
     rtl,_=compile_project(copy.deepcopy(example))
     # Node 2 is reshape: unpacked lane 0 maps to highest vector byte.
-    assert 'assign __vl_n2_p1[47] = __vl_n2_p0[0][7];' in rtl
-    assert 'assign __vl_n2_p1[0] = __vl_n2_p0[5][0];' in rtl
+    assert 'assign out[47] = pack_to_vector_in[0][7];' in rtl
+    assert 'assign out[0] = pack_to_vector_in[5][0];' in rtl
 
 
 def test_duplicate_driver_and_lane_overlap(example):
@@ -171,7 +171,7 @@ def test_constant_keeps_context_and_expression(example):
                  'ports':[{'name':'out','role':'source','shape':{'packed':[[7,0]],'unpacked':[],'atom_width':1}}]}]
     p['edges']=[]
     r=analyze(ProjectRequest(project=p))
-    assert "assign __vl_n0_p0 = '1;" in r['rtl']
+    assert "assign out = '1;" in r['rtl']
 
 
 def test_concat_order_and_ascending_ranges(example):
@@ -184,8 +184,8 @@ def test_concat_order_and_ascending_ranges(example):
         {'name':'out','role':'source','shape':out}]}]
     p['edges']=[]
     rtl,_=compile_project(p)
-    assert 'assign __vl_n0_p2[15] = __vl_n0_p0[0];' in rtl
-    assert 'assign __vl_n0_p2[0] = __vl_n0_p1[7];' in rtl
+    assert 'assign out[15] = join_first[0];' in rtl
+    assert 'assign out[0] = join_second[7];' in rtl
     assert worker(p,'validate',text=rtl,top=p['name'])['ok']
 
 
@@ -247,3 +247,35 @@ def test_invalid_wire_geometry_is_rejected(example):
     for points in [None,{},[{'x':True,'y':0}],[{'x':float('inf'),'y':0}],[{'x':0}],[{'x':10_000_001,'y':0}], [{'x':0,'y':0}]*257]:
         p=copy.deepcopy(example);p['edges'][0]['points']=points
         with pytest.raises(ValueError):validate_project(p)
+
+
+def test_generated_identifiers_use_single_underscores(example):
+    from backend.engine import identifier
+    result=export(ProjectRequest(project=copy.deepcopy(example)))
+    rtl=result['text'].split('// verilinx prj begin')[0]
+    assert '__' not in rtl
+    assert 'wire [7:0] data_out [0:5];' in rtl
+    assert '.data_out(data_out[i])' in rtl
+    assert 'vlx_internal_' not in rtl
+    with pytest.raises(ValueError,match='reserved'):
+        identifier('vlx_internal_n0_p0')
+
+
+def test_output_port_net_names_and_namespace_collisions():
+    p = simple({'project.f': 'm.sv', 'm.sv': 'module m(output wire q); assign q=1; endmodule'})
+    p['parameters'] = 'parameter int U_b_q = 1'
+    p['nodes'] = [dict(node(), name='U_a'), dict(dict(node(), name='U_b'), id='b'), dict(dict(node(), name='U_c'), id='c')]
+    p['edges'] = []
+    rtl, _ = compile_project(p)
+    assert '.q(q)' in rtl
+    assert '.q(U_b_q_2)' in rtl
+    assert '.q(U_c_q)' in rtl
+    assert '__' not in rtl
+    assert worker(p, 'validate', text=rtl, top=p['name'])['ok']
+
+    # A top-level port wins over an internal output of the same name.
+    p['nodes'].append({'id': 'io', 'name': 'q', 'kind': 'output', 'position': {'x': 0, 'y': 0},
+                       'ports': [{'name': 'in', 'role': 'target', 'shape': {'packed': [], 'unpacked': [], 'atom_width': 1}}]})
+    rtl, _ = compile_project(p)
+    assert '.q(U_a_q)' in rtl
+    assert worker(p, 'validate', text=rtl, top=p['name'])['ok']
