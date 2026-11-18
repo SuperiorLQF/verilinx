@@ -1,7 +1,7 @@
-export const COLORS={cyan:'#27dcf1',purple:'#a64cf7',pink:'#f35be7',green:'#18ee68',blue:'#3ca8ff'};
+export const COLORS={cyan:'#67d4f5',purple:'#a64cf7',pink:'#f35be7',green:'#18ee68',blue:'#3479ec'};
 export const SHAPES={square:[[0,0],[1,0],[0,1],[1,1]],single:[[0,0]],tall:[[0,0],[0,1]],la:[[0,0],[1,0],[0,1]],lb:[[1,0],[0,1],[1,1]]};
 export const INITIAL=[
- ['c1','blue',1,0,'la'],['c2','blue',1,1,'lb'],['p1','purple',4,0,'single'],
+ ['c1','cyan',1,0,'la'],['c2','cyan',1,1,'lb'],['p1','purple',4,0,'single'],
  ['p2','purple',0,1,'single'],['m1','pink',3,1,'square','v'],['p3','purple',5,1,'single'],
  ['p4','purple',1,3,'square','v'],['b1','blue',0,4,'single'],['b2','blue',5,4,'single'],
  ['g1','green',1,5,'square'],['g2','green',3,5,'square'],
@@ -10,7 +10,7 @@ export const INITIAL=[
 // A reservoir holds finite runs of up to CAPACITY color runs. A color
 // remains available until its current stock is exhausted; later runs stay in pipes.
 export const CAPACITY=[2,1];
-export const QUEUES=[['blue','blue','green','purple','purple','purple','blue','blue'],['pink','blue','green','pink','purple','purple','blue']];
+export const QUEUES=[['cyan','cyan','green','purple','purple','purple','blue','blue'],['pink','blue','green','pink','purple','purple','blue']];
 export function fresh(){return {pieces:INITIAL.map(([id,color,x,y,shape,axis])=>({id,color,x,y,shape,axis:axis||'both',fill:0})),queues:QUEUES.map(q=>[...q]),moves:0,cleared:0};}
 export function allowed(x,y){return Number.isInteger(x)&&Number.isInteger(y)&&y>=0&&y<9&&((x>=1&&x<=4)||((x===0||x===5)&&[1,4,5,7,8].includes(y)));}
 export function cells(p){return SHAPES[p.shape].map(([x,y])=>[p.x+x,p.y+y]);}
