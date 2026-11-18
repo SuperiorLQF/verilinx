@@ -7,7 +7,7 @@ export const INITIAL=[
  ['g1','green',1,5,'square'],['g2','green',3,5,'square'],
  ['b3','blue',0,7,'tall'],['p5','purple',1,7,'square','v'],['m2','pink',3,7,'square','v'],['b4','blue',5,7,'tall']
 ];
-// A reservoir holds finite runs of up to CAPACITY distinct colors. A color
+// A reservoir holds finite runs of up to CAPACITY color runs. A color
 // remains available until its current stock is exhausted; later runs stay in pipes.
 export const CAPACITY=[2,1];
 export const QUEUES=[['blue','blue','green','purple','purple','purple','blue','blue'],['pink','blue','green','pink','purple','purple','blue']];
@@ -23,7 +23,7 @@ export function canMove(s,id,dx,dy){const p=s.pieces.find(p=>p.id===id);if(!p||(
 export function move(s,id,dx,dy){if(!canMove(s,id,dx,dy))return false;const p=s.pieces.find(p=>p.id===id);p.x+=dx;p.y+=dy;s.moves++;return true;}
 // A reservoir spans two columns. Only a container cell directly against its
 // bottom edge (board row zero) can open the outlet; air gaps never transmit sand.
-export function sourceStock(s,side){const colors=new Set(),stock=[];for(const color of s.queues[side]){if(!colors.has(color)&&colors.size===CAPACITY[side])break;colors.add(color);stock.push(color);}return stock;}
+export function sourceStock(s,side){const stock=[];let previous=null,runs=0;for(const color of s.queues[side]){if(color!==previous){if(runs===CAPACITY[side])break;runs++;previous=color;}stock.push(color);}return stock;}
 export function sourceColors(s,side){return [...new Set(sourceStock(s,side))];}
 export function receiver(s,side){
  const columns=side===0?[1,2]:[3,4];
