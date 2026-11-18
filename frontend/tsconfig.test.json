@@ -8,6 +8,7 @@
   "include": [
     "src/canvas-state.ts",
     "src/port-layout.ts",
-    "src/connections.ts"
+    "src/connections.ts",
+    "src/arrange.ts"
   ]
 }

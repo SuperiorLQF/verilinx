@@ -16,7 +16,7 @@ type Handlers = Pick<BlockNode['data'], 'onEdit' | 'onToggle' | 'layoutMode' | '
  */
 export function reconcileCanvasNodes(
   blocks: Block[], previous: BlockNode[], handlers: Handlers,
-  selected: string | null, resetPositions = false,
+  selected: string | null | ReadonlySet<string>, resetPositions = false,
 ): BlockNode[] {
   const existing = new Map(previous.map(node => [node.id, node]));
   return blocks.map(block => {
@@ -28,7 +28,7 @@ export function reconcileCanvasNodes(
       draggable: !handlers.layoutMode,
       connectable: !handlers.layoutMode,
       position: resetPositions ? block.position : current?.position ?? block.position,
-      selected: block.id === selected,
+      selected: typeof selected === 'string' ? block.id === selected : selected?.has(block.id) ?? false,
       data: { block, ...handlers },
     };
   });
