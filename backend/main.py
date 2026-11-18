@@ -15,6 +15,8 @@ from .engine import (WORKER, MAX_BYTES, safe_path, worker, instance, evaluate,
 
 BASE = Path(__file__).resolve().parents[1]
 app = FastAPI(title='Verilinx API', version='0.1.0')
+from .access import access_gate
+app.middleware('http')(access_gate)
 
 
 @app.exception_handler(ValueError)
@@ -70,6 +72,11 @@ def catalog_directory(root, entry, env):
     if not data.get('ok'):
         raise ValueError(data.get('error') or data.get('diagnostics'))
     return data
+
+
+@app.get('/healthz')
+def healthz():
+    return {'ok': True}
 
 
 @app.get('/api/health')

@@ -70,3 +70,5 @@ node --check review/app.js
 ```
 
 详见 [开发文档](docs/DEVELOPMENT.md)：协议、架构、API、语义边界和人工验收清单。
+
+Windows、Linux 的下载包启动命令与在线部署配置见 [运行与部署](docs/DEPLOYMENT.md)。仓库已提供 Dockerfile 和 Render Blueprint；只有托管平台确认部署成功后才视为已发布。

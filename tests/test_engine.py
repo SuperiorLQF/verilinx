@@ -195,3 +195,17 @@ def test_invalid_component_payload_is_validation_error(example):
     with TestClient(app) as client:
         result=client.post('/api/analyze',json={'project':p})
         assert result.status_code==422
+
+
+def test_optional_https_access_link(monkeypatch):
+    monkeypatch.setenv('VERILINX_ACCESS_TOKEN','test-token-at-least-24-characters')
+    with TestClient(app,base_url='https://testserver') as client:
+        assert client.get('/healthz').json()=={'ok':True}
+        assert client.get('/api/health').status_code==401
+        login=client.get('/review/?access=test-token-at-least-24-characters',follow_redirects=False)
+        assert login.status_code==303
+        assert 'access=' not in login.headers['location']
+        assert 'HttpOnly' in login.headers['set-cookie']
+        assert 'Secure' in login.headers['set-cookie']
+        assert client.get('/review/').status_code==200
+        assert client.get('/api/health').status_code==200

@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: verilinx-demo
+    runtime: docker
+    repo: https://github.com/SuperiorLQF/verilinx
+    branch: main
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    envVars:
+      - key: VERILINX_ACCESS_TOKEN
+        generateValue: true
