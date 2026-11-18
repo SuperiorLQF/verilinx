@@ -1,6 +1,8 @@
 # Verilinx
 
-[发行与下载页面](https://superiorlqf.github.io/verilinx/) · [Linux x86_64 独立运行包](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.2.tar.gz)
+[发行页面文件](docs/index.html) · [Pages 启用步骤](docs/GITHUB_PAGES.md) · [Linux x86_64 独立运行包](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.2.tar.gz)
+
+Pages 页面文件已经准备，当前 GitHub 连接没有 Pages 配置权限，自动开启返回 403；公开网站尚未上线。仓库管理员完成上述启用步骤后即可部署。
 
 Linux 独立包内置 Python 和 slang，无需安装 Python、Node.js 或 Vivado。支持 glibc 2.31+ 的 x86_64 Linux，例如 Ubuntu 20.04+、Debian 11+；解压后执行 `./verilinx`，打开 `http://127.0.0.1:3000/`。完整步骤见 [Linux 运行说明](docs/LINUX.md)。
 

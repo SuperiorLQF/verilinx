@@ -5,7 +5,7 @@
 - [已有安装：仅更新前端](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-ports-update-0.1.2.zip)
 - [含已构建前端的源码完整包](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-demo-0.1.2.zip)
 - [最新完整源码包固定地址](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-demo.zip)
-- [发行下载页](https://superiorlqf.github.io/verilinx/)
+- [发行下载页文件](../docs/index.html) / [GitHub Pages 启用步骤](../docs/GITHUB_PAGES.md)（当前等待管理员启用）
 
 独立运行包需要 x86_64 Linux / glibc 2.31+（Ubuntu 20.04+、Debian 11+），无需安装 Python、Node.js 或 slang。解压后运行：
 
