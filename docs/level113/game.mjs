@@ -1,4 +1,4 @@
-import {COLORS,SHAPES,sourceStock,sourceColors,fresh,allowed,cells,canMove,move,receiver,ready,finish,settle,key,legalMoves} from './core.mjs?v=shades-4';
+import {COLORS,SHAPES,sourceStock,sourceColors,findHint,fresh,allowed,cells,canMove,move,receiver,ready,finish,settle,key,legalMoves} from './core.mjs?v=pool-5';
 const $=id=>document.getElementById(id),canvas=$('board'),ctx=canvas.getContext('2d'),C=80,X=60,Y=300;
 let state=fresh(),history=[],selected=null,drag=null,started=false,remaining=180,last=performance.now(),paused=false,ended=false,particles=[],flashes=[],sound=false,audio,toastTimer,hintCell=null,hintUntil=0;
 const modal=$('modal'),initialBody=$('modalBody').innerHTML;
@@ -19,7 +19,8 @@ $('undo').onclick=()=>{const prev=history.pop();if(!prev){toast('还没有可以
 $('time').onclick=()=>{if(ended){toast('点击「再玩一次」重新挑战。');return;}remaining+=60;tone(700);toast('已增加 60 秒，慢慢来。');};
 $('sound').onclick=()=>{sound=!sound;$('sound').textContent=`音效 ${sound?'开':'关'}`;tone();};
 $('hint').onclick=()=>{if(ended)return;if([0,1].some(i=>ready(state,i))){toast('容器已贴住同色色仓，正在填充。');return;}const solution=nextHint();if(solution){selected=solution.id;hintCell=solution;hintUntil=performance.now()+5500;toast(`发光容器向${solution.dx>0?'右':solution.dx<0?'左':solution.dy>0?'下':'上'}移动 ${Math.max(Math.abs(solution.dx),Math.abs(solution.dy))} 格。`);}else toast('暂未找到短路径；可以撤回几步，或重开尝试。');};
-function nextHint(){const root=copy(state);settle(root);const size=root.pieces.length,q=[{s:root,first:null}],seen=new Set([key(root)]);let head=0;while(head<q.length&&head<7000){const {s,first}=q[head++];for(const m of legalMoves(s)){const next=copy(s);move(next,m.id,m.dx,m.dy);settle(next);const f=first||m;if(next.pieces.length<size)return f;const k=key(next);if(!seen.has(k)){seen.add(k);q.push({s:next,first:f});}}}return null;}
+function nextHint(){return findHint(state);}
+
 function attempt(id,dx,dy){if(!started||paused||ended)return false;if(canMove(state,id,dx,dy)){remember();move(state,id,dx,dy);selected=id;hintCell=null;refresh();tone(350);return true;}tone(140);toast('这里被挡住了；↕ 容器只能上下移动。');return false;}
 function local(e){const r=canvas.getBoundingClientRect();return {x:(e.clientX-r.left)*600/r.width,y:(e.clientY-r.top)*1100/r.height};}
 function hit(pos){const x=Math.floor((pos.x-X)/C),y=Math.floor((pos.y-Y)/C);return state.pieces.find(p=>cells(p).some(([a,b])=>a===x&&b===y));}
