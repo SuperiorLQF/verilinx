@@ -14,4 +14,4 @@
 
 站点地址为 `https://superiorlqf.github.io/verilinx/`，在部署成功前该地址可能返回 404。启用后，后续提交到 main 的 docs 目录会自动更新页面。
 
-Pages 只提供静态发行下载页。完整编辑器、HTML 检视客户端和 slang 后端在 Linux 独立程序内运行，使用说明见 [LINUX.md](LINUX.md)。
+Pages 只提供静态发行下载页。完整编辑器和 slang 后端在 Linux 独立程序内运行，使用说明见 [LINUX.md](LINUX.md)。

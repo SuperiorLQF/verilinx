@@ -27,7 +27,7 @@ git clone --branch main git@github.com:SuperiorLQF/verilinx.git
 ```sh
 git clone --filter=blob:none --sparse --branch main https://github.com/SuperiorLQF/verilinx.git
 cd verilinx
-git sparse-checkout set backend frontend review examples scripts tests docs
+git sparse-checkout set backend frontend examples scripts tests docs
 git switch -c dev/my-work
 ```
 
@@ -61,7 +61,7 @@ npm --prefix frontend run dev -- --port 5173 --strictPort
 
 在运行这些命令的同一台电脑浏览器打开 **http://127.0.0.1:5173/**。修改 `frontend/src` 后由 Vite 热更新；修改 `backend` 后由 uvicorn 自动重启。两端都保持终端运行，Ctrl+C 停止。
 
-开发前端的 `/api` 和 `/review` 请求由 Vite 转发到 `127.0.0.1:3000`。HTML 检视版可以访问 http://127.0.0.1:5173/review/ 或 http://127.0.0.1:3000/review/。
+开发前端的 `/api` 请求由 Vite 转发到 `127.0.0.1:3000`，主画布访问 5173。
 
 **开发时主画布访问 5173。** Git 仓库不跟踪 `frontend/dist`；没有执行构建时，3000 根路径只会提示先构建前端，或显示此前构建的旧页面。修改源码不会自动更新 3000 上的 dist。
 
@@ -111,14 +111,12 @@ npm --prefix frontend run build
 npm --prefix frontend test
 npm --prefix frontend run build
 .venv/bin/python -m pytest -q
-node --check review/app.js
 ```
 
 | 目录 | 内容 |
 | --- | --- |
 | frontend/src | React 主画布、端口、手动布线与布局 |
 | backend | FastAPI、slang 分析、RTL 生成和工程编码 |
-| review | 共用后端的独立 HTML 检视客户端 |
 | examples | 示例 RTL 与嵌套 filelist |
 | tests | 后端回归 |
 | docs/DEVELOPMENT.md | 架构、数据格式和实现边界 |

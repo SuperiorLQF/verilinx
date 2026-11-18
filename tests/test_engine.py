@@ -150,12 +150,11 @@ def test_path_escape_and_duplicate_names(example,tmp_path):
         compile_project(p)
 
 
-def test_http_shared_clients_and_export_roundtrip():
+def test_http_editor_and_export_roundtrip():
     with TestClient(app) as client:
         assert client.get('/api/health').json()['slang']=='12.1.0'
-        assert client.get('/review/').status_code==200
-        assert 'HTML REVIEW' in client.get('/review/').text
-        assert client.get('/review/app.js').status_code==200
+        assert client.get('/review/').status_code==404
+        assert client.get('/review/app.js').status_code==404
         assert client.get('/').status_code==200
         p=client.get('/api/demo').json()
         out=client.post('/api/export',json={'project':p})
@@ -202,12 +201,12 @@ def test_optional_https_access_link(monkeypatch):
     with TestClient(app,base_url='https://testserver') as client:
         assert client.get('/healthz').json()=={'ok':True}
         assert client.get('/api/health').status_code==401
-        login=client.get('/review/?access=test-token-at-least-24-characters',follow_redirects=False)
+        login=client.get('/?access=test-token-at-least-24-characters',follow_redirects=False)
         assert login.status_code==303
         assert 'access=' not in login.headers['location']
         assert 'HttpOnly' in login.headers['set-cookie']
         assert 'Secure' in login.headers['set-cookie']
-        assert client.get('/review/').status_code==200
+        assert client.get('/').status_code==200
         assert client.get('/api/health').status_code==200
 
 

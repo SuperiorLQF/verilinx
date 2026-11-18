@@ -1,6 +1,6 @@
 # Verilinx
 
-[发行与下载页面](https://superiorlqf.github.io/verilinx/) · [Pages 启用步骤](docs/GITHUB_PAGES.md) · [Linux x86_64 独立运行包](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.4.tar.gz)
+[发行与下载页面](https://superiorlqf.github.io/verilinx/) · [Pages 启用步骤](docs/GITHUB_PAGES.md) · [Linux x86_64 独立运行包](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.5.tar.gz)
 
 GitHub Pages 下载页已启用，后续版本随 main 的 docs 目录更新。
 
@@ -36,10 +36,9 @@ npm --prefix frontend run dev -- --port 5173 --strictPort
 ```
 
 - 开发中的 React 画布：`http://127.0.0.1:5173/`
-- HTML 检视版：`http://127.0.0.1:5173/review/`
 - 后端 API 文档：`http://127.0.0.1:3000/docs`
 
-两个前端共用同一 API，编辑状态各自独立，可以用顶层工程文件互换设计。移动端需访问主机可达或已转发的地址；手机的 localhost 是手机自身。
+主画布通过 API 调用 slang，并使用顶层工程文件保存和恢复设计。移动端需访问主机可达或已转发的地址；手机的 localhost 是手机自身。
 
 源码修改后，先在自己的开发分支提交，再执行 `git fetch origin` 和 `git merge origin/main` 合并上游更新。没有本地开发提交且工作区干净的 main 分支，可用 `git pull --ff-only`。requirements 或 package-lock 改变后才需要重新安装对应依赖。
 
@@ -54,17 +53,9 @@ Git 不跟踪 frontend/dist。要用 3000 单端口运行构建版，先执行 `
 3. 输出数组同时进入分线器和 48 位向量转换组件；lane 0 对应最高字节。
 4. 点击「检查设计」，查看 slang 诊断和生成 RTL。
 5. 点击「导出顶层」，下载 `verilinx_top.sv`。
-6. 在另一个前端「打开工程」，恢复输入源码、嵌套 filelist 原文、参数、组件、网络及布局。
+6. 点击「打开工程」，恢复输入源码、嵌套 filelist 原文、参数、组件、网络及布局。
 
 导入自己的项目时，选择覆盖所有依赖的目录及一个入口 filelist。允许嵌套 `-f/-F`，路径语义交给 slang。使用相对路径；归档之外的绝对路径依赖会被拒绝。
-
-手机不能选择目录时，可上传路径→文件文本的 JSON 包：
-
-```sh
-python scripts/bundle.py examples /tmp/verilinx-example.json
-```
-
-在 HTML 版导入 JSON 包，入口填写 `project.f`。
 
 ## 实现内容
 
@@ -96,7 +87,6 @@ python scripts/bundle.py examples /tmp/verilinx-example.json
 .venv/bin/python -m pytest -q
 npm --prefix frontend test
 npm --prefix frontend run build
-node --check review/app.js
 ```
 
 详见 [开发文档](docs/DEVELOPMENT.md)：协议、架构、API、语义边界和人工验收清单。

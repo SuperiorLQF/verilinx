@@ -13,7 +13,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 && r
 RUN pip install --no-cache-dir -r requirements.txt \
     && useradd --create-home --uid 10001 verilinx
 COPY --chown=verilinx:verilinx backend/ backend/
-COPY --chown=verilinx:verilinx review/ review/
 COPY --chown=verilinx:verilinx examples/ examples/
 COPY --chown=verilinx:verilinx scripts/run_web.py scripts/run_web.py
 COPY --from=frontend --chown=verilinx:verilinx /build/frontend/dist/ frontend/dist/

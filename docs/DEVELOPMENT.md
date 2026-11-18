@@ -2,7 +2,7 @@
 
 日常克隆、热更新、同步上游和从 ZIP 迁移，请先阅读 [源码开发指南](SOURCE_DEVELOPMENT.md)。下文描述架构与实现。
 
-版本 0.1.4 · 2026-11-18。本文描述实际实现及明确的 demo 边界。
+版本 0.1.5 · 2026-11-18。本文描述实际实现及明确的 demo 边界。
 
 ## 1. 产品合同
 
@@ -10,7 +10,7 @@
 
 顶层参数按行输入，不要求逗号或分号。实例覆盖表达式在顶层上下文先求真实值，再以 `-G` 分析子模块。generate 指定数量表达式，索引为 `i`。数组和向量通过显式适配器连接。
 
-顶层 `.sv` 同时携带工程。恢复不依赖原始服务器目录。React 主画布和独立 HTML 检视客户端共享后端；编辑状态各自独立。
+顶层 `.sv` 同时携带工程。恢复不依赖原始服务器目录。仅保留 React 主画布，使用统一后端 API。
 
 ## 2. 目录与架构
 
@@ -20,7 +20,6 @@
 | `backend/engine.py` | 参数规范化、两阶段分析、图检查、RTL、工程编解码 |
 | `backend/slang_worker.py` | 隔离的 pyslang Driver，唯一 HDL 语义执行层 |
 | `frontend/src/` | TypeScript / React / React Flow 画布 |
-| `review/` | 无需构建的 HTML/CSS/JS 检视客户端 |
 | `examples/` | 六路 generate、宏边界及数组模块 |
 | `tests/test_engine.py` | 引擎和 HTTP 回归 |
 | `scripts/bundle.py` | 移动端上传用 JSON 文件包 |
@@ -28,7 +27,6 @@
 ```mermaid
 flowchart LR
   React[React 画布] --> API[FastAPI]
-  HTML[HTML 检视] --> API
   API --> Engine[工程引擎]
   Engine --> Eval[顶层参数求值]
   Engine --> Override[目标 module 的 -G]
@@ -209,7 +207,6 @@ endmodule
 ```sh
 .venv/bin/python -m pytest -q
 npm --prefix frontend run build
-node --check review/app.js
 ```
 
 自动回归覆盖：嵌套 filelist 宏边界、编译选项宏全局性、目标类型上下文、参数相关类型、X/Z、未知参数、异构 generate、数组位序、驱动重叠、缺失连接、编码恢复/损坏、路径越界及共享 API。
@@ -222,8 +219,8 @@ node --check review/app.js
 4. generate 叠放/展开后网络不变；lane 可单独连接。
 5. 同接 aggregate/lane，检查必须拒绝重叠。
 6. 配置 split/concat 的端口次序，核对 RTL 位序。
-7. 两前端互相导出/恢复，比较源码和设计数据。
-8. 手机端通过表单和下拉端点完成接线、检查和导出。
+7. 导出后重新打开顶层文件，比较源码和设计数据。
+8. 在主画布完成接线、检查和导出。
 9. 错误表达式不覆盖上一次成功的实例分析。
 
 后端 18 项回归通过。0.1.1 新增 4 项画布状态回归，并在真实浏览器验证示例加载、节点可见性、generate 展开、模块新增和改参；手机设备仍需验收。
@@ -284,6 +281,10 @@ React Flow 的受控节点必须保留 `measured` 尺寸。旧实现仅保存位
 
 模块与组件的位置保存为 `nodes[].position = {x,y}`；每条连线保存端点 ID/端口 ID，以及顺序明确的 `edges[].points = [{x,y},...]`。所有位置都是画布工程空间的绝对坐标，`screenToFlowPosition` 只在用户输入时做视口反变换。端口边缘位置保存在 `nodes[].portLayout`；视口 pan/zoom 单独保存。保存快照读取当前 React Flow 节点位置，防止仅保存旧领域坐标。
 
-这些字段连同原始嵌套 filelist、源码、参数、generate 信息和网络一起经 JSON → zlib → Base64 + SHA-256 写入 `// verilinx prj begin` 与 `// verilinx prj end` 之间。无需外部布局文件；解码、校验后按原坐标恢复，不根据窗口大小重新布局。RTL 编译只消费网络与端口形状，不消费几何信息。每条线最多 256 个点，坐标须为有限数字，绝对值不超过 10000000。格式版本仍为 1，新字段可选。HTML 检视客户端保留这些字段，但不提供图形化布线编辑。
+这些字段连同原始嵌套 filelist、源码、参数、generate 信息和网络一起经 JSON → zlib → Base64 + SHA-256 写入 `// verilinx prj begin` 与 `// verilinx prj end` 之间。无需外部布局文件；解码、校验后按原坐标恢复，不根据窗口大小重新布局。RTL 编译只消费网络与端口形状，不消费几何信息。每条线最多 256 个点，坐标须为有限数字，绝对值不超过 10000000。格式版本仍为 1，新字段可选。
 
 自动回归共 19 项前端、22 项后端。新增后端回归经实际 slang 导出/恢复验证模块绝对坐标和完整 points 一致、源码快照一致、RTL 字节不变，并拒绝不合法几何字段。浏览器实测 4 次点击放点、Backspace 撤回、完成第 9 条连线、拖动点、重画取消、导出后刷新页面再打开顶层、双击加点和 Delete 仅删除该点。恢复的 10 个节点绝对坐标逐项一致。
+
+## 16. 0.1.5 移除独立检视客户端
+
+删除 review 目录、后端 /review 静态挂载、前端入口和 Vite 代理；Docker 与 Linux 包不再携带该客户端，仅维护 React 主画布。历史版本记录与旧发行包保留其原始内容。HTTP 回归确认旧 /review/ 及其脚本返回 404，密钥登录入口改为主画布根路径。源码开发使用 main，Vite 5173 仍通过 /api 代理调用 3000 后端。

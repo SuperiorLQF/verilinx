@@ -1,4 +1,4 @@
-"""Shared local API for the React editor and buildless HTML review client."""
+"""Local API and static serving for the React block editor."""
 import copy
 import json
 import os
@@ -14,7 +14,7 @@ from .engine import (WORKER, worker_command, MAX_BYTES, safe_path, worker, insta
                      compile_project, encode_project, decode_project, validate_project, validate_node)
 
 BASE = Path(__file__).resolve().parents[1]
-app = FastAPI(title='Verilinx API', version='0.1.4')
+app = FastAPI(title='Verilinx API', version='0.1.5')
 from .access import access_gate
 app.middleware('http')(access_gate)
 
@@ -209,9 +209,8 @@ def restore(req: TextRequest):
     return p
 
 
-app.mount('/review',StaticFiles(directory=BASE/'review',html=True),name='review')
 if (BASE/'frontend/dist').is_dir():
     app.mount('/',StaticFiles(directory=BASE/'frontend/dist',html=True),name='editor')
 else:
     @app.get('/')
-    def index():return {'message':'Build frontend first: npm --prefix frontend run build','review':'/review/'}
+    def index():return {'message':'Build frontend first: npm --prefix frontend run build'}

@@ -24,15 +24,15 @@ python3.12 -m venv .venv
 .venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 3000
 ```
 
-打开 `http://localhost:3000/`；HTML 版为 `/review/`。从 GitHub 源码启动还需先执行 `npm --prefix frontend ci` 和 `npm --prefix frontend run build`。
+打开 `http://localhost:3000/`。从 GitHub 源码启动还需先执行 `npm --prefix frontend ci` 和 `npm --prefix frontend run build`。
 
 ## Render 部署
 
-`Dockerfile` 用 Node 构建前端，再将前端产物、Python 服务和输入示例合并到非 root Python 镜像中。两个前端和 `/api` 同源，无需配置跨域。无数据库或其他持久服务需求。
+`Dockerfile` 用 Node 构建前端，再将前端产物、Python 服务和输入示例合并到非 root Python 镜像中。主画布和 `/api` 同源，无需配置跨域。无数据库或其他持久服务需求。
 
 仓库中的 `render.yaml` 描述 Docker Web Service，选择 free 方案并自动生成访问密钥；服务会使用平台提供的 PORT。部署仍需要用户拥有并授权 Render 账号。Blueprint 配置存在不代表已经上线；应以平台实际返回的成功部署 URL 为准。
 
-发布后由服务 secret store 注入 `VERILINX_ACCESS_TOKEN`（至少 24 个随机字符），启动器不接受空密钥。完整授权入口格式为 `https://<实际域名>/review/?access=<密钥>`。成功打开后跳转去掉查询参数，密钥转入 Secure、HttpOnly、SameSite=Strict Cookie。图形版与 HTML 版共享该 Cookie。不要把密钥写入仓库、Docker 镜像、请求日志或公开文档。
+发布后由服务 secret store 注入 `VERILINX_ACCESS_TOKEN`（至少 24 个随机字符），启动器不接受空密钥。完整授权入口格式为 `https://<实际域名>/?access=<密钥>`。成功打开后跳转去掉查询参数，密钥转入 Secure、HttpOnly、SameSite=Strict Cookie。主画布和 API 使用该 Cookie。不要把密钥写入仓库、Docker 镜像、请求日志或公开文档。
 
 `/healthz` 只返回 `{"ok":true}`，供托管平台探活。其余页面和 API 均需访问授权。已有本地 uvicorn 运行方式不设置该环境变量时保持本地开发行为。
 
@@ -42,7 +42,7 @@ python3.12 -m venv .venv
 
 1. 匿名请求 `/api/health` 返回 401；`/healthz` 返回 200。
 2. 用完整链接解锁，重定向中不再带密钥；Cookie 带 Secure 和 HttpOnly。
-3. 两前端、静态资源以及 API 请求均成功。
+3. 主画布、静态资源以及 API 请求均成功。
 4. 载入六路示例，执行 `/api/analyze` 和 `/api/export`，由真实 slang 返回结果。
 5. 从导出的顶层恢复工程，再比较输入 filelist、参数和连线。
 6. 在手机浏览器实际执行上述操作。
@@ -55,6 +55,6 @@ GitHub Pages 用于发行下载页，不能运行 pyslang 后端。完整编辑�
 
 ## 容器验证记录
 
-本轮已构建镜像，并在非 root 容器内通过双前端、匿名拒绝、健康检查、带授权的真实 slang 示例、导出和恢复测试。构建环境使用代理 CA，以 BuildKit secret 临时提供给 pip/npm；证书没有进入镜像或仓库。普通托管构建仍使用 Dockerfile 默认的 TLS 校验。
+早期版本已构建服务镜像，并在非 root 容器内通过主画布、匿名拒绝、健康检查、带授权的真实 slang 示例、导出和恢复测试。构建环境使用代理 CA，以 BuildKit secret 临时提供给 pip/npm；证书没有进入镜像或仓库。普通托管构建仍使用 Dockerfile 默认的 TLS 校验。
 
 构建依赖审计仍报告 picomatch/fdir/tinyglobby/Vite 的 ReDoS 告警，`npm audit fix` 没有消除，未声称依赖审计零告警。发布运行镜像只包含构建后的静态资源和 Python 服务，不包含 Node.js、Vite 开发服务器或这些构建依赖。

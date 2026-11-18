@@ -1,21 +1,21 @@
-# Linux 独立运行版 0.1.4
+# Linux 独立运行版 0.1.5
 
-支持 x86_64、glibc 2.31 或更新的 Linux，例如 Debian 11+、Ubuntu 20.04+。不支持 ARM、Alpine/musl 或 Windows。内置 Python、pyslang 12.1.0、后端及两个前端，无需安装 Python、Node.js、slang 或 Vivado。
+支持 x86_64、glibc 2.31 或更新的 Linux，例如 Debian 11+、Ubuntu 20.04+。不支持 ARM、Alpine/musl 或 Windows。内置 Python、pyslang 12.1.0、后端及主画布，无需安装 Python、Node.js、slang 或 Vivado。
 
 ## 下载、解压、启动
 
 ```sh
-curl -fL https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.4.tar.gz -o verilinx-linux-x86_64-0.1.4.tar.gz
-tar -xzf verilinx-linux-x86_64-0.1.4.tar.gz
+curl -fL https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.5.tar.gz -o verilinx-linux-x86_64-0.1.5.tar.gz
+tar -xzf verilinx-linux-x86_64-0.1.5.tar.gz
 cd verilinx-linux-x86_64
 ./verilinx
 ```
 
-保持终端打开，在同一台电脑的浏览器进入 `http://127.0.0.1:3000/`。HTML 检视版为 `http://127.0.0.1:3000/review/`。终端按 Ctrl+C 停止。
+保持终端打开，在同一台电脑的浏览器进入 `http://127.0.0.1:3000/`。终端按 Ctrl+C 停止。
 
 也可以运行 `./start.sh`。如文件权限丢失，执行 `chmod +x verilinx start.sh`。请保留 `_internal` 目录，它是运行必需的依赖和页面，不能只复制一个可执行文件。
 
-占用端口时执行 `./verilinx --port 3001`，然后打开 `http://127.0.0.1:3001/`。本地默认只监听 127.0.0.1；在受信任的局域网供手机评测，可执行 `./verilinx --host 0.0.0.0 --port 3000`，手机打开 Linux 主机的局域网 IP，例如 `http://192.168.1.10:3000/review/`，IP 需替换为实际地址。
+占用端口时执行 `./verilinx --port 3001`，然后打开 `http://127.0.0.1:3001/`。本地默认只监听 127.0.0.1；在受信任的局域网供手机评测，可执行 `./verilinx --host 0.0.0.0 --port 3000`，手机打开 Linux 主机的局域网 IP，例如 `http://192.168.1.10:3000/`，IP 需替换为实际地址。
 
 ## 自检与校验
 
@@ -23,9 +23,9 @@ cd verilinx-linux-x86_64
 ./verilinx --self-test
 ```
 
-这会实际运行打包的 slang 工作进程，加载六路示例，导出和恢复工程，并检查端口布局和两个前端资源。成功时输出 `"ok": true`，随后退出。
+这会实际运行打包的 slang 工作进程，加载六路示例，导出和恢复工程，并检查端口布局和主画布资源。成功时输出 `"ok": true`，随后退出。
 
-下载目录同时提供 `.sha256` 文件。在下载包所在目录执行 `sha256sum -c verilinx-linux-x86_64-0.1.4.tar.gz.sha256` 可校验完整性。
+下载目录同时提供 `.sha256` 文件。在下载包所在目录执行 `sha256sum -c verilinx-linux-x86_64-0.1.5.tar.gz.sha256` 可校验完整性。
 
 ## 接线和端口布局
 
@@ -44,7 +44,7 @@ cd verilinx-linux-x86_64
 
 「自动对齐」默认开启，拖动接近其他节点的边缘或中心时显示粉色辅助线并吸附，容差为 7 个屏幕像素，不随缩放改变。多选整体拖动保持相对间距；Alt 可临时关闭吸附。按 Space+拖动平移画布，或关闭「框选」后直接拖动画布。
 
-这些布局操作仅影响主画布，HTML 检视版继续使用表单和下拉框编辑网络，并保留已有走线数据。导出的顶层工程包含模块绝对位置、端口布局、每条连线全部转折点及画布视口。坐标采用工程坐标，不随缩放或平移变化。
+导出的顶层工程包含模块绝对位置、端口布局、每条连线全部转折点及画布视口。坐标采用工程坐标，不随缩放或平移变化。
 
 ## 发行方式
 
