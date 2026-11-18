@@ -11,6 +11,14 @@ import zlib
 from pathlib import Path
 
 WORKER = Path(__file__).with_name('slang_worker.py')
+
+
+def worker_command():
+    # A frozen Linux app dispatches the same compiler worker without a Python install.
+    if getattr(sys, 'frozen', False):
+        return [sys.executable, '--slang-worker']
+    return [sys.executable, str(WORKER)]
+
 MAX_BYTES = 16 * 1024 * 1024
 IDENT = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_$]*$')
 
@@ -71,7 +79,7 @@ def worker(project, mode, **kwargs):
             p.write_text(content)
         import os
         req = dict(root=str(root), entry=project['inputs']['entry'], mode=mode, **kwargs)
-        result = subprocess.run([sys.executable,str(WORKER)],input=json.dumps(req),text=True,
+        result = subprocess.run(worker_command(),input=json.dumps(req),text=True,
                                 capture_output=True,timeout=25,
                                 env={**os.environ,**project['inputs'].get('env',{})})
         if result.returncode:

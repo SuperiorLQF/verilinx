@@ -5,5 +5,9 @@
     "allowImportingTsExtensions": false,
     "outDir": ".test-dist"
   },
-  "include": ["src/canvas-state.ts"]
+  "include": [
+    "src/canvas-state.ts",
+    "src/port-layout.ts",
+    "src/connections.ts"
+  ]
 }

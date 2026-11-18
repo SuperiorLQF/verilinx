@@ -91,8 +91,12 @@ def run(req):
             Path(generated).unlink(missing_ok=True)
 
 
-if __name__ == '__main__':
+def cli():
     try:
         print(json.dumps(run(json.load(sys.stdin))))
     except Exception as exc:
         print(json.dumps({'ok': False, 'error': str(exc)}))
+
+
+if __name__ == '__main__':
+    cli()

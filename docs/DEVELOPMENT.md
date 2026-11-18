@@ -1,6 +1,6 @@
 # Verilinx 开发文档
 
-版本 0.1 · 2026-11-17。本文描述实际实现及明确的 demo 边界。
+版本 0.1.2 · 2026-11-18。本文描述实际实现及明确的 demo 边界。
 
 ## 1. 产品合同
 
@@ -243,3 +243,15 @@ node --check review/app.js
 React Flow 的受控节点必须保留 `measured` 尺寸。旧实现仅保存位置，每次从领域节点重建渲染节点都丢弃尺寸，导致内部初始化重置，DOM 永久 `visibility: hidden`。现在使用 `useNodesState` 保存完整渲染状态，`reconcileCanvasNodes` 在领域数据更新时保留尺寸和拖动位置。尺寸是运行时 UI 数据，不写入工程模型。加载或恢复工程时，仅恢复文件中保存的位置和视口，等待节点实际测量完成后再适配视图，不依赖固定延迟。
 
 运行 `npm --prefix frontend test` 可验证尺寸跨数据/选择更新保留、新增节点、拖动/恢复位置，以及展开收起重新测量和删除。
+
+## 13. 0.1.2 端口、连线与原生发行
+
+`port-layout.ts` 将每个 Handle 映射为 `{side, offset}`，其中 side 为四边之一，offset 为沿边的归一化坐标。位置写入 `node.portLayout[handleId]`，跟随现有工程编码，无需修改文件格式。旧工程没有该字段时自动恢复左右两侧默认布局。generate 聚合与 lane 使用不同 ID；叠放时保留不可交互的 lane Handle，已有 lane 连线仍可显示。
+
+`BlockView.tsx` 使用 pointer capture 处理 Shift+拖动或 P 布局模式的拖动，将客户坐标投影到最近的模块边，兼容画布缩放。预览变化调用 `useUpdateNodeInternals` 更新连线锚点；松手才提交领域状态。布局模式显式禁用节点拖动和新建连线，并保持端口可接受 pointer 事件，防止事件穿透后误拖整个模块。输入箭头指向内部，输出箭头指向外部；角度由方向和边共同确定。Shift+方向键沿周界微调，P/Esc 只在非文本编辑时处理。
+
+`connections.ts` 统一检查端点存在性、方向、精确数组形状及输入驱动重叠，聚合和 lane 不能同时驱动同一输入。输出允许扇出。拒绝原因展示在活动区域；最终 HDL 语义仍由后端 slang 验证。端口移动仅影响显示，回归验证生成的 RTL 字节不变，导出恢复后锚点保留。
+
+冻结运行时使用 `worker_command()` 分派：源码运行调用 Python 工作脚本，打包运行则调用当前可执行文件的 `--slang-worker` 入口。各 slang 操作仍隔离进程，未改用全局共享编译器。Linux x86_64 包基于 Debian 11/glibc 2.31，收集 pyslang、nanobind 后端、uvicorn 及静态资源，在无 Python/Node 的 Debian 11 容器中以非 root 用户通过实际编译、导出、恢复自检。原生包使用说明见 [LINUX.md](LINUX.md)。
+
+本版本通过 20 项后端、10 项前端自动回归和生产前端构建。浏览器实际验证了从右侧拖端口到顶部、模块位置不变、原有 8 条连接保留、键盘微调，以及从移动后的输出端口拖出第 9 条连接。验收截图见 [端口画布](images/ports-0.1.2.jpg)。实际手机设备仍需人工测评。

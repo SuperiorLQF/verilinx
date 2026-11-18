@@ -1,0 +1,42 @@
+# Linux 独立运行版 0.1.2
+
+支持 x86_64、glibc 2.31 或更新的 Linux，例如 Debian 11+、Ubuntu 20.04+。不支持 ARM、Alpine/musl 或 Windows。内置 Python、pyslang 12.1.0、后端及两个前端，无需安装 Python、Node.js、slang 或 Vivado。
+
+## 下载、解压、启动
+
+```sh
+curl -fL https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.2.tar.gz -o verilinx-linux-x86_64-0.1.2.tar.gz
+tar -xzf verilinx-linux-x86_64-0.1.2.tar.gz
+cd verilinx-linux-x86_64
+./verilinx
+```
+
+保持终端打开，在同一台电脑的浏览器进入 `http://127.0.0.1:3000/`。HTML 检视版为 `http://127.0.0.1:3000/review/`。终端按 Ctrl+C 停止。
+
+也可以运行 `./start.sh`。如文件权限丢失，执行 `chmod +x verilinx start.sh`。请保留 `_internal` 目录，它是运行必需的依赖和页面，不能只复制一个可执行文件。
+
+占用端口时执行 `./verilinx --port 3001`，然后打开 `http://127.0.0.1:3001/`。本地默认只监听 127.0.0.1；在受信任的局域网供手机评测，可执行 `./verilinx --host 0.0.0.0 --port 3000`，手机打开 Linux 主机的局域网 IP，例如 `http://192.168.1.10:3000/review/`，IP 需替换为实际地址。
+
+## 自检与校验
+
+```sh
+./verilinx --self-test
+```
+
+这会实际运行打包的 slang 工作进程，加载六路示例，导出和恢复工程，并检查端口布局和两个前端资源。成功时输出 `"ok": true`，随后退出。
+
+下载目录同时提供 `.sha256` 文件。在下载包所在目录执行 `sha256sum -c verilinx-linux-x86_64-0.1.2.tar.gz.sha256` 可校验完整性。
+
+## 接线和端口布局
+
+1. 点击「载入六路示例」，或导入自己的全量 filelist。
+2. 从输出箭头拖到输入箭头，也可以先点输出、再点输入。一个输入只允许一个驱动；错误会在底部显示原因。
+3. 按 P 或点击「端口布局」，拖动箭头到模块任意一边，按 Esc 退出。普通模式可用 Shift+拖动箭头移动位置。聚焦箭头后用 Shift+方向键沿周界微调。
+4. 输入箭头始终指向模块，输出箭头始终离开模块。移动位置不改变网络，连线端点同步跟随。
+5. 导出顶层 `.sv` 保存工程；下次「打开工程」恢复源文件、网络、位置和端口布局。
+
+## 发行方式
+
+Linux 包发布可执行程序和必要运行资源，不附后端开发源码、TypeScript 源码或构建脚本。随包仍包含上游库许可证、示例 RTL 和浏览器运行所需的 JavaScript。打包不等于防逆向保护。
+
+当前主仓库公开，GitHub 不支持将公开仓库的单个分支设为私有。`linux-release` 用作仅含发行包及说明的独立分发分支，并不提供分支访问保密。真正闭源的后续开发需要单独的私有仓库；已经公开过的代码无法通过新分支收回。

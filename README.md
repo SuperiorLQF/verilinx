@@ -1,5 +1,9 @@
 # Verilinx
 
+[发行与下载页面](https://superiorlqf.github.io/verilinx/) · [Linux x86_64 独立运行包](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.2.tar.gz)
+
+Linux 独立包内置 Python 和 slang，无需安装 Python、Node.js 或 Vivado。支持 glibc 2.31+ 的 x86_64 Linux，例如 Ubuntu 20.04+、Debian 11+；解压后执行 `./verilinx`，打开 `http://127.0.0.1:3000/`。完整步骤见 [Linux 运行说明](docs/LINUX.md)。
+
 [直接下载包含前端的完整 Demo ZIP](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-demo.zip)
 
 基于 slang 的 SystemVerilog 模块连接 demo。单入口 filelist、顶层参数、generate、信号拼拆，以及「顶层文件即工程」。
@@ -53,6 +57,7 @@ python scripts/bundle.py examples /tmp/verilinx-example.json
 - 标量、packed 及固定 unpacked 数组；lane 级连接。
 - 顶层 IO、常量、split、concat、reshape。
 - 形状、重叠驱动、必需输入检查，最终 RTL 再次交给 slang 验证。
+- 箭头表示端口方向；拖动输出到输入连线。按 P 切换端口布局模式，或 Shift+拖动箭头沿四边滑动，Shift+方向键微调；位置随顶层工程保存。
 - JSON → zlib → Base64，附 SHA-256，内嵌完整工程及源码快照。
 
 ## 首版边界

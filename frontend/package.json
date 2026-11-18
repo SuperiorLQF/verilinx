@@ -1,12 +1,12 @@
 {
   "name": "verilinx-editor",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
-    "test": "tsc --project tsconfig.test.json && node tests/canvas-state.test.mjs"
+    "test": "tsc --project tsconfig.test.json && node tests/canvas-state.test.mjs && node tests/ports.test.mjs"
   },
   "dependencies": {
     "@xyflow/react": "^12.10.0",

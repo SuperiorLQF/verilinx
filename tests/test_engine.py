@@ -209,3 +209,19 @@ def test_optional_https_access_link(monkeypatch):
         assert 'Secure' in login.headers['set-cookie']
         assert client.get('/review/').status_code==200
         assert client.get('/api/health').status_code==200
+
+
+def test_port_layout_roundtrip_does_not_change_rtl(example):
+    p=copy.deepcopy(example)
+    p['nodes'][0]['portLayout']={'clk':{'side':'top','offset':.3},'data_out':{'side':'bottom','offset':.72}}
+    original=analyze(ProjectRequest(project=example))['rtl']
+    result=export(ProjectRequest(project=p))
+    assert result['text'].startswith(original)
+    restored=decode_project(result['text'])
+    assert restored['nodes'][0]['portLayout']==p['nodes'][0]['portLayout']
+
+
+def test_frozen_worker_command(monkeypatch):
+    import backend.engine as engine
+    monkeypatch.setattr(engine.sys,'frozen',True,raising=False)
+    assert engine.worker_command()==[engine.sys.executable,'--slang-worker']

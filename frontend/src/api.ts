@@ -1,6 +1,8 @@
 export type Shape = {packed:number[][];unpacked:number[][];atom_width:number;signed?:boolean};
 export type Port = {name:string;shape:Shape;role:'source'|'target';type?:string};
-export type Block = {id:string;kind:string;name:string;module?:string;overrides?:Record<string,string>;count?:string;view?:string;position:{x:number;y:number};ports?:Port[];expression?:string;analysis?:{count:number;homogeneous?:boolean;variants?:{ports:{name:string;direction:string;shape:Shape;type:string}[]}[];resolved:Record<string,string>;parameters:{name:string;literal:string;display:string}[];ports:{name:string;direction:string;shape:Shape;type:string}[]}};
+export type PortSide = 'left'|'right'|'top'|'bottom';
+export type PortAnchor = {side:PortSide;offset:number};
+export type Block = {portLayout?:Record<string,PortAnchor>;id:string;kind:string;name:string;module?:string;overrides?:Record<string,string>;count?:string;view?:string;position:{x:number;y:number};ports?:Port[];expression?:string;analysis?:{count:number;homogeneous?:boolean;variants?:{ports:{name:string;direction:string;shape:Shape;type:string}[]}[];resolved:Record<string,string>;parameters:{name:string;literal:string;display:string}[];ports:{name:string;direction:string;shape:Shape;type:string}[]}};
 export type Edge = {id:string;source:string;target:string;sourcePort:string;targetPort:string};
 export type Project = {schema:number;name:string;parameters:string;inputs:{entry:string;files:Record<string,string>};modules:{name:string;declaration:string}[];nodes:Block[];edges:Edge[];viewport?:{x:number;y:number;zoom:number;saved?:boolean}};
 export async function api(path:string,body?:unknown){const r=await fetch('/api/'+path,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw Error(d.detail||'Request failed');return d;}

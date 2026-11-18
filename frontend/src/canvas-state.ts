@@ -1,13 +1,15 @@
 import type { Node } from '@xyflow/react';
-import type { Block } from './api';
+import type { Block, PortAnchor } from './api';
 
 export type BlockNode = Node<{
   block: Block;
   onEdit: (id: string) => void;
   onToggle: (id: string) => void;
+  layoutMode?: boolean;
+  onPortMove?: (nodeId: string, portId: string, anchor: PortAnchor) => void;
 }, 'block'>;
 
-type Handlers = Pick<BlockNode['data'], 'onEdit' | 'onToggle'>;
+type Handlers = Pick<BlockNode['data'], 'onEdit' | 'onToggle' | 'layoutMode' | 'onPortMove'>;
 
 /** Keep React Flow's measured dimensions when domain data is refreshed.
  * Dropping `measured` resets React Flow's initialization and hides every node.
@@ -23,6 +25,8 @@ export function reconcileCanvasNodes(
       ...current,
       id: block.id,
       type: 'block',
+      draggable: !handlers.layoutMode,
+      connectable: !handlers.layoutMode,
       position: resetPositions ? block.position : current?.position ?? block.position,
       selected: block.id === selected,
       data: { block, ...handlers },

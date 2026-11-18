@@ -10,11 +10,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
-from .engine import (WORKER, MAX_BYTES, safe_path, worker, instance, evaluate,
+from .engine import (WORKER, worker_command, MAX_BYTES, safe_path, worker, instance, evaluate,
                      compile_project, encode_project, decode_project, validate_project, validate_node)
 
 BASE = Path(__file__).resolve().parents[1]
-app = FastAPI(title='Verilinx API', version='0.1.1')
+app = FastAPI(title='Verilinx API', version='0.1.2')
 from .access import access_gate
 app.middleware('http')(access_gate)
 
@@ -64,7 +64,7 @@ class TextRequest(BaseModel):
 
 def catalog_directory(root, entry, env):
     request = {'root': str(root), 'entry':entry, 'mode':'catalog'}
-    result = subprocess.run([sys.executable,str(WORKER)],input=json.dumps(request),
+    result = subprocess.run(worker_command(),input=json.dumps(request),
                             text=True,capture_output=True,timeout=25,env={**os.environ,**env})
     if result.returncode:
         raise ValueError('slang worker failed: '+result.stderr[-2000:])

@@ -2,6 +2,8 @@
 
 ## 下载包和源码的区别
 
+0.1.2 另提供无需安装 Python/Node 的 Linux x86_64 独立运行包，解压后 `./verilinx` 即可启动，要求 glibc 2.31+。完整步骤见 [Linux 运行说明](LINUX.md)。下文 Python 安装步骤针对源码 ZIP。
+
 交付 ZIP 包含 `frontend/dist`，不需要 Node.js，需 Python 3.12+ 安装后端依赖。GitHub 源码不跟踪构建产物，从源码运行才需要 Node.js 20.19+ 和 npm 构建。
 
 Linux 已完成运行与自动测试。Windows 依赖有对应发行版，但尚未进行 Windows 实机验收，不将它描述为已经验证的安装包。没有要求 Vivado、MATLAB 或单独安装 slang，`pyslang` 包包含编译前端。
@@ -49,7 +51,7 @@ python3.12 -m venv .venv
 
 Sites 的 Worker 运行时不能直接运行 pyslang 原生扩展。尝试直接发布临时 Cloudflare HTTPS 隧道时，隧道注册连接被环境网络拒绝，未获得可用公网链接。没有用只有页面、没有 slang 后端的静态预览代替完整部署。
 
-下一步是连接 Render 后部署此 Docker 服务，并返回经验证的实际链接。隧道失败不影响本地 ZIP 运行。
+GitHub Pages 用于发行下载页，不能运行 pyslang 后端。完整编辑器通过本地独立运行包启动；Render 仍为可选的在线后端部署方式。隧道失败不影响本地运行。
 
 ## 容器验证记录
 
