@@ -59,7 +59,7 @@ python scripts/bundle.py examples /tmp/verilinx-example.json
 
 信号声明和位映射按当前顶层默认参数展开。参数修改后需在编辑器重新分析、调整适配器并重新生成；导出的 RTL 尚不是可以在外部任意改参数而自动重构布线的通用 IP。
 
-暂不支持 interface/modport、inout/ref、动态数组、结构体端口、类型/字符串/实数参数、协议级自动连线、综合及仿真。诊断显示 slang 原始文本。浏览器策略阻止了本轮实际 GUI 交互验收；已完成后端回归、前端构建和 HTML JavaScript 语法检查。
+暂不支持 interface/modport、inout/ref、动态数组、结构体端口、类型/字符串/实数参数、协议级自动连线、综合及仿真。诊断显示 slang 原始文本。0.1.1 已在真实浏览器复现并修复空白画布，验证了示例节点/连线、generate 展开、模块新增和改参。手机端仍需人工验收。
 
 服务用于受信任本地开发环境，尚未实现多租户认证。
 
@@ -67,6 +67,7 @@ python scripts/bundle.py examples /tmp/verilinx-example.json
 
 ```sh
 .venv/bin/python -m pytest -q
+npm --prefix frontend test
 npm --prefix frontend run build
 node --check review/app.js
 ```

@@ -6,3 +6,4 @@ frontend/dist/
 .runtime/
 *.log
 *.tsbuildinfo
+frontend/.test-dist/

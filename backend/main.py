@@ -14,7 +14,7 @@ from .engine import (WORKER, MAX_BYTES, safe_path, worker, instance, evaluate,
                      compile_project, encode_project, decode_project, validate_project, validate_node)
 
 BASE = Path(__file__).resolve().parents[1]
-app = FastAPI(title='Verilinx API', version='0.1.0')
+app = FastAPI(title='Verilinx API', version='0.1.1')
 from .access import access_gate
 app.middleware('http')(access_gate)
 
