@@ -50,3 +50,9 @@ python3.12 -m venv .venv
 Sites 的 Worker 运行时不能直接运行 pyslang 原生扩展。尝试直接发布临时 Cloudflare HTTPS 隧道时，隧道注册连接被环境网络拒绝，未获得可用公网链接。没有用只有页面、没有 slang 后端的静态预览代替完整部署。
 
 下一步是连接 Render 后部署此 Docker 服务，并返回经验证的实际链接。隧道失败不影响本地 ZIP 运行。
+
+## 容器验证记录
+
+本轮已构建镜像，并在非 root 容器内通过双前端、匿名拒绝、健康检查、带授权的真实 slang 示例、导出和恢复测试。构建环境使用代理 CA，以 BuildKit secret 临时提供给 pip/npm；证书没有进入镜像或仓库。普通托管构建仍使用 Dockerfile 默认的 TLS 校验。
+
+构建依赖审计仍报告 picomatch/fdir/tinyglobby/Vite 的 ReDoS 告警，`npm audit fix` 没有消除，未声称依赖审计零告警。发布运行镜像只包含构建后的静态资源和 Python 服务，不包含 Node.js、Vite 开发服务器或这些构建依赖。
