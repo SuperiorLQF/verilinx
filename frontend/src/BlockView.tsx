@@ -24,6 +24,7 @@ export function BlockView({ id, data, selected }: NodeProps<BlockNode>) {
   useLayoutEffect(() => { updateInternals(id); }, [id, geometryKey, updateInternals]);
 
   function start(event: PointerEvent<HTMLDivElement>, port: DisplayPort) {
+    if(data.wiring){event.preventDefault();event.stopPropagation();return;}
     if (!event.shiftKey && !data.layoutMode) return;
     event.preventDefault(); event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -50,7 +51,7 @@ export function BlockView({ id, data, selected }: NodeProps<BlockNode>) {
     const anchor = preview?.id === port.id ? preview.anchor : port.anchor;
     const activate = (element:HTMLDivElement) => {
       const rect=element.getBoundingClientRect();
-      data.onPortClick?.({nodeId:id,portId:port.id,role:port.role,client:{x:rect.left+rect.width/2,y:rect.top+rect.height/2}});
+      data.onPortClick?.({nodeId:id,portId:port.id,role:port.role,side:anchor.side,client:{x:rect.left+rect.width/2,y:rect.top+rect.height/2}});
     };
     return <div className={'border-port side-' + anchor.side + (port.hidden ? ' hidden-port' : '')} key={port.id} aria-hidden={port.hidden || undefined}>
       <Handle id={port.id} type={port.role} position={position[anchor.side]}
@@ -66,6 +67,7 @@ export function BlockView({ id, data, selected }: NodeProps<BlockNode>) {
         onDoubleClick={event => event.stopPropagation()}
         onKeyDown={event => {
           if(!data.layoutMode&&!port.hidden&&['Enter',' '].includes(event.key)){event.preventDefault();event.stopPropagation();activate(event.currentTarget);return;}
+          if(data.wiring)return;
           if (!event.shiftKey || !['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key)) return;
           event.preventDefault(); event.stopPropagation();
           data.onPortMove?.(id, port.id, slideAnchor(anchor, event.key === 'ArrowRight' || event.key === 'ArrowDown'));

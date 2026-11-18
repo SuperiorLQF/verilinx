@@ -1,12 +1,12 @@
-# Linux 独立运行版 0.1.5
+# Linux 独立运行版 0.1.6
 
 支持 x86_64、glibc 2.31 或更新的 Linux，例如 Debian 11+、Ubuntu 20.04+。不支持 ARM、Alpine/musl 或 Windows。内置 Python、pyslang 12.1.0、后端及主画布，无需安装 Python、Node.js、slang 或 Vivado。
 
 ## 下载、解压、启动
 
 ```sh
-curl -fL https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.5.tar.gz -o verilinx-linux-x86_64-0.1.5.tar.gz
-tar -xzf verilinx-linux-x86_64-0.1.5.tar.gz
+curl -fL https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.6.tar.gz -o verilinx-linux-x86_64-0.1.6.tar.gz
+tar -xzf verilinx-linux-x86_64-0.1.6.tar.gz
 cd verilinx-linux-x86_64
 ./verilinx
 ```
@@ -25,12 +25,12 @@ cd verilinx-linux-x86_64
 
 这会实际运行打包的 slang 工作进程，加载六路示例，导出和恢复工程，并检查端口布局和主画布资源。成功时输出 `"ok": true`，随后退出。
 
-下载目录同时提供 `.sha256` 文件。在下载包所在目录执行 `sha256sum -c verilinx-linux-x86_64-0.1.5.tar.gz.sha256` 可校验完整性。
+下载目录同时提供 `.sha256` 文件。在下载包所在目录执行 `sha256sum -c verilinx-linux-x86_64-0.1.6.tar.gz.sha256` 可校验完整性。
 
 ## 接线和端口布局
 
 1. 点击「载入六路示例」，或导入自己的全量 filelist。
-2. 点击输出箭头开始手动布线，移动鼠标预览；每次单击画布放置一个转折点，最后点击输入箭头完成。不会自动生成绕行路径；不放转折点则直接连接两端。接近水平/垂直时轻微吸附，按 Shift 可限制方向。一个输入只允许一个驱动，错误时保留草稿以便重选。
+2. 点击输出箭头开始手动布线，移动鼠标预览；每次单击画布放置一个转折点，最后点击输入箭头完成。不会自动生成绕行路径；每段仅水平或垂直，Shift 切换当前段方向；最后一段轻微错位时自动对齐输入端口。一个输入只允许一个驱动，错误时保留草稿以便重选。
 3. 布线过程中 Backspace 或「撤回」移除上一个点，Esc 或「取消」放弃草稿。选中已有线可拖动转折点、双击线段增加点；Alt+单击或聚焦转折点后 Delete 删除该点。「重画路径」需在原输入端口结束，Esc 保留原路径。
 4. 按 P 或点击「端口布局」，拖动箭头到模块任意一边，按 Esc 退出。普通模式可用 Shift+拖动箭头移动位置。聚焦箭头后用 Shift+方向键沿周界微调。
 5. 输入箭头始终指向模块，输出箭头始终离开模块。移动位置不改变网络，连线端点同步跟随。
@@ -51,3 +51,5 @@ cd verilinx-linux-x86_64
 Linux 包发布可执行程序和必要运行资源，不附后端开发源码、TypeScript 源码或构建脚本。随包仍包含上游库许可证、示例 RTL 和浏览器运行所需的 JavaScript。打包不等于防逆向保护。
 
 当前主仓库公开，GitHub 不支持将公开仓库的单个分支设为私有。`linux-release` 用作仅含发行包及说明的独立分发分支，并不提供分支访问保密。真正闭源的后续开发需要单独的私有仓库；已经公开过的代码无法通过新分支收回。
+
+0.1.6 的生成连线优先采用输出端口名，例如 `data_out`。冲突时加实例名或数字后缀；自动生成名称不使用双下划线。

@@ -45,7 +45,7 @@ def run(req):
         fd, generated = tempfile.mkstemp(suffix='.sv', prefix='verilinx_')
         with os.fdopen(fd, 'w') as f:
             f.write(req['text'])
-        args += [generated, '--top', req.get('top', '__verilinx_eval')]
+        args += [generated, '--top', req.get('top', 'vlx_internal_eval')]
     elif req['mode'] == 'instance':
         args += ['--top', req['module']]
         args += ['-G' + k + '=' + v for k, v in req.get('overrides', {}).items()]

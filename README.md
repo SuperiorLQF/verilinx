@@ -1,6 +1,6 @@
 # Verilinx
 
-[发行与下载页面](https://superiorlqf.github.io/verilinx/) · [Pages 启用步骤](docs/GITHUB_PAGES.md) · [Linux x86_64 独立运行包](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.5.tar.gz)
+[发行与下载页面](https://superiorlqf.github.io/verilinx/) · [Pages 启用步骤](docs/GITHUB_PAGES.md) · [Linux x86_64 独立运行包](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.6.tar.gz)
 
 GitHub Pages 下载页已启用，后续版本随 main 的 docs 目录更新。
 
@@ -68,7 +68,7 @@ Git 不跟踪 frontend/dist。要用 3000 单端口运行构建版，先执行 `
 - 顶层 IO、常量、split、concat、reshape。
 - 形状、重叠驱动、必需输入检查，最终 RTL 再次交给 slang 验证。
 - 框选、多选删除、Ctrl/⌘+A 全选；六种批量对齐；拖动边缘/中心吸附，Alt 临时关闭。
-- 手动折线布线：点击输出、逐点放置转折点、点击输入完成；选中连线可拖动转折点。
+- 手动正交布线：点击输出、逐点放置转折点、点击输入完成；选中连线可拖动转折点。
 - 模块绝对坐标、每条线的全部转折点和端口布局都编码在顶层文件注释中，打开工程原样恢复。
 - 箭头表示端口方向。按 P 切换端口布局模式，或 Shift+拖动箭头沿四边滑动，Shift+方向键微调；位置随顶层工程保存。
 - JSON → zlib → Base64，附 SHA-256，内嵌完整工程及源码快照。

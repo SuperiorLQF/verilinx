@@ -25,7 +25,7 @@ IDENT = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_$]*$')
 
 
 def identifier(name):
-    if not IDENT.fullmatch(name) or name.startswith('__vl_') or name.startswith('__verilinx_'):
+    if not IDENT.fullmatch(name) or name.startswith('vlx_internal_'):
         raise ValueError(f'Invalid / reserved identifier: {name}')
     return name
 
@@ -117,8 +117,8 @@ def declarations(text):
 
 
 def evaluate(project, expressions, index=None, types=None):
-    names = [f'__vl_e{i}' for i in range(len(expressions))]
-    text = 'module __verilinx_eval;\n' + declarations(project.get('parameters', '')) + '\n'
+    names = [f'vlx_internal_e{i}' for i in range(len(expressions))]
+    text = 'module vlx_internal_eval;\n' + declarations(project.get('parameters', '')) + '\n'
     if index is not None:
         text += f'localparam int i = {index};\n'
     types = types or ['']*len(expressions)
@@ -272,6 +272,37 @@ def compile_project(project):
     lines[-1] += ' (\n' + ',\n'.join('    ' + x for x in io) + '\n);'
     lines.append(declarations(project.get('parameters', '')))
     endpoint = {}
+    # Output port names are the public net names. Reserve the complete top-level
+    # namespace first, then give source endpoints priority over input adapters.
+    used_signals = names | set(re.findall(r'[a-zA-Z_][a-zA-Z0-9_$]*', project.get('parameters', '')))
+    used_signals |= {f"g_{n['name']}" for n in nodes if n['kind'] == 'module'}
+    signal_names = {}
+
+    def allocate_signal(n, port, role, lane=None):
+        base = port if role == 'source' else f"{n['name']}_{port}"
+        if lane is not None:
+            base += f'_lane{lane}'
+        base = re.sub('_+', '_', base)
+        candidate = base
+        if candidate in used_signals:
+            candidate = re.sub('_+', '_', f"{n['name']}_{base}")
+        stem, suffix = candidate, 2
+        while candidate in used_signals:
+            candidate = f'{stem.rstrip("_")}_{suffix}'
+            suffix += 1
+        used_signals.add(candidate)
+        return candidate
+
+    for role_priority in ('source', 'target'):
+        for n in nodes:
+            ports = n['analysis']['ports'] if n['kind'] == 'module' else n.get('ports', [])
+            for p in ports:
+                _, role = endpoint_shape(n, p['name'])
+                if role != role_priority or n['kind'] in ('input', 'output'):
+                    continue
+                lanes = range(n['analysis']['count']) if n['kind'] == 'module' and not n['analysis'].get('homogeneous', True) else [None]
+                for lane in lanes:
+                    signal_names[(n['id'], p['name'], lane)] = allocate_signal(n, p['name'], role, lane)
     total_bits = 0
     for idx, n in enumerate(nodes):
         portnames = ([p['name'] for p in n['analysis']['ports']] if n['kind']=='module'
@@ -284,7 +315,7 @@ def compile_project(project):
             if n['kind']=='module' and not n['analysis'].get('homogeneous',True):
                 for lane,variant in enumerate(n['analysis']['variants']):
                     vp = next(p for p in variant['ports'] if p['name']==port)
-                    lane_sig = f'__vl_n{idx}_p{pidx}_l{lane}'
+                    lane_sig = signal_names[(n['id'], port, lane)]
                     endpoint[(n['id'],port+'@'+str(lane))] = (lane_sig,vp['shape'],role)
                     lines.append(declaration(lane_sig,vp['shape'],'wire')+';')
                 continue
@@ -298,7 +329,7 @@ def compile_project(project):
                 raise ValueError('Invalid top-level or constant port role')
             if bits(sh) < 1 or bits(sh) > 65536:
                 raise ValueError('Signal width must be 1..65536 bits')
-            sig = n['name'] if n['kind'] in ('input','output') else f'__vl_n{idx}_p{pidx}'
+            sig = n['name'] if n['kind'] in ('input','output') else signal_names[(n['id'], port, None)]
             endpoint[(n['id'], port)] = (sig, sh, role)
             if n['kind'] not in ('input','output'):
                 lines.append(declaration(sig, sh, 'wire') + ';')

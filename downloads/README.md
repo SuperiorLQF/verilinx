@@ -1,10 +1,10 @@
-# 下载 0.1.5
+# 下载 0.1.6
 
 - **持续开发：[Git 克隆与热更新指南](../docs/SOURCE_DEVELOPMENT.md)**，源码位于 main 分支。
-- [Linux x86_64 独立运行包（约 20 MB）](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.5.tar.gz)
+- [Linux x86_64 独立运行包（约 20 MB）](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.6.tar.gz)
 - [Linux 完整运行步骤](../docs/LINUX.md)
-- [已有 Python 安装：代码更新包](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-update-0.1.5.zip)
-- [含已构建前端的源码完整包](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-demo-0.1.5.zip)
+- [已有 Python 安装：代码更新包](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-update-0.1.6.zip)
+- [含已构建前端的源码完整包](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-demo-0.1.6.zip)
 - [最新完整源码包固定地址](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-demo.zip)
 - [发行与下载页面](https://superiorlqf.github.io/verilinx/)
 
@@ -20,24 +20,24 @@ cd verilinx
 独立运行包需要 x86_64 Linux / glibc 2.31+（Ubuntu 20.04+、Debian 11+），无需安装 Python、Node.js 或 slang。解压后运行：
 
 ```sh
-tar -xzf verilinx-linux-x86_64-0.1.5.tar.gz
+tar -xzf verilinx-linux-x86_64-0.1.6.tar.gz
 cd verilinx-linux-x86_64
 ./verilinx
 ```
 
 在同一台电脑浏览器打开 http://127.0.0.1:3000/ 。保持终端运行，Ctrl+C 停止。
 
-0.1.5 已移除独立 HTML 检视版，仅保留主画布。支持逐点手动布线：点击输出、单击放转折点、点击输入完成。Backspace 撤回，Esc 取消；选中线可以编辑转折点或重画路径。模块绝对坐标、全部走线转折点及端口布局随顶层文件保存。19 项前端、22 项后端测试和真实浏览器导出恢复验收通过。
+仅保留主画布。0.1.6 强制横平竖直走线，完成连接时自动修正末段轻微错位；生成连线以输出端口名命名，重名时加实例名或编号。支持逐点手动布线：点击输出、单击放转折点、点击输入完成。Backspace 撤回，Esc 取消；选中线可以编辑转折点或重画路径。模块绝对坐标、全部走线转折点及端口布局随顶层文件保存。22 项前端、24 项后端测试和真实浏览器导出恢复验收通过。
 
 已有 Python 安装可用更新包同步后端入口与前端，不重装环境。在原来的 verilinx 目录先 Ctrl+C 停止服务，再执行：
 
 ```sh
-curl -fL https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-update-0.1.5.zip -o /tmp/verilinx-frontend-update.zip
+curl -fL https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-update-0.1.6.zip -o /tmp/verilinx-frontend-update.zip
 unzip -o /tmp/verilinx-frontend-update.zip
 .venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 3000
 ```
 
-浏览器 Ctrl+Shift+R，左上角应显示 STUDIO / 0.1.5。补丁不修改工程。
+浏览器 Ctrl+Shift+R，左上角应显示 STUDIO / 0.1.6。补丁不修改工程。
 
 源码完整 ZIP 含前端产物，无需 Node.js，仍需 Python 3.12+ 安装后端依赖。每个包都有 `.sha256` 文件，下载后可执行 `sha256sum -c <文件名>.sha256`。
 
