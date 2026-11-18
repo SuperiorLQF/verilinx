@@ -225,3 +225,26 @@ def test_frozen_worker_command(monkeypatch):
     import backend.engine as engine
     monkeypatch.setattr(engine.sys,'frozen',True,raising=False)
     assert engine.worker_command()==[engine.sys.executable,'--slang-worker']
+
+
+def test_wire_bends_and_absolute_positions_saved_in_top_file(example):
+    from backend.main import restore, TextRequest
+    original,_=compile_project(copy.deepcopy(example))
+    p=copy.deepcopy(example)
+    positions=[{'x':-123.25+i*411.5,'y':88.125-i*34.75} for i in range(len(p['nodes']))]
+    for n,position in zip(p['nodes'],positions):n['position']=position
+    p['edges'][0]['points']=[{'x':-12.25,'y':130.5},{'x':42.75,'y':130.5},{'x':42.75,'y':240}]
+    result=export(ProjectRequest(project=p))
+    assert result['text'].startswith(original)
+    assert '// verilinx prj begin' in result['text']
+    loaded=restore(TextRequest(text=result['text']))
+    assert [n['position'] for n in loaded['nodes']]==positions
+    assert loaded['edges']==p['edges']
+    assert loaded['inputs']==p['inputs']
+
+
+def test_invalid_wire_geometry_is_rejected(example):
+    from backend.engine import validate_project
+    for points in [None,{},[{'x':True,'y':0}],[{'x':float('inf'),'y':0}],[{'x':0}],[{'x':10_000_001,'y':0}], [{'x':0,'y':0}]*257]:
+        p=copy.deepcopy(example);p['edges'][0]['points']=points
+        with pytest.raises(ValueError):validate_project(p)

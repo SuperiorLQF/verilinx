@@ -48,21 +48,24 @@ export function BlockView({ id, data, selected }: NodeProps<BlockNode>) {
   }
   function renderPort(port: DisplayPort) {
     const anchor = preview?.id === port.id ? preview.anchor : port.anchor;
+    const activate = (element:HTMLDivElement) => {
+      const rect=element.getBoundingClientRect();
+      data.onPortClick?.({nodeId:id,portId:port.id,role:port.role,client:{x:rect.left+rect.width/2,y:rect.top+rect.height/2}});
+    };
     return <div className={'border-port side-' + anchor.side + (port.hidden ? ' hidden-port' : '')} key={port.id} aria-hidden={port.hidden || undefined}>
       <Handle id={port.id} type={port.role} position={position[anchor.side]}
         className={'arrow-handle nodrag nopan ' + port.role + (data.layoutMode ? ' arranging' : '')}
         style={anchorStyle(anchor)} role="button" tabIndex={port.hidden ? -1 : 0}
         aria-label={`${block.name}.${port.id} ${port.role === 'target' ? '输入' : '输出'}端口`}
-        title={`${port.id} ${shapeText(port.shape)}\n拖动连线；Shift+拖动沿边框移动；Shift+方向键微调`}
-        isConnectable={!data.layoutMode && !port.hidden}
-        isConnectableStart={!data.layoutMode && !port.hidden}
-        isConnectableEnd={!data.layoutMode && !port.hidden}
+        title={`${port.id} ${shapeText(port.shape)}\n点击端口开始 / 完成手动布线；Shift+拖动沿边框移动；Shift+方向键微调`}
+        isConnectable={false} isConnectableStart={false} isConnectableEnd={false}
         onPointerDownCapture={event => start(event, port)} onPointerMove={move}
         onPointerUp={event => finish(event)} onPointerCancel={event => finish(event, true)}
-        onMouseDownCapture={event => { if (event.shiftKey || data.layoutMode) { event.preventDefault(); event.stopPropagation(); } }}
-        onClickCapture={event => { if (event.shiftKey || data.layoutMode) { event.preventDefault(); event.stopPropagation(); } }}
+        onMouseDownCapture={event => {event.preventDefault();event.stopPropagation();}}
+        onClickCapture={event => {event.preventDefault();event.stopPropagation();if(!event.shiftKey&&!data.layoutMode&&!port.hidden)activate(event.currentTarget);}}
         onDoubleClick={event => event.stopPropagation()}
         onKeyDown={event => {
+          if(!data.layoutMode&&!port.hidden&&['Enter',' '].includes(event.key)){event.preventDefault();event.stopPropagation();activate(event.currentTarget);return;}
           if (!event.shiftKey || !['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key)) return;
           event.preventDefault(); event.stopPropagation();
           data.onPortMove?.(id, port.id, slideAnchor(anchor, event.key === 'ArrowRight' || event.key === 'ArrowDown'));

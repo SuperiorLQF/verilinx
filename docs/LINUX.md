@@ -1,12 +1,12 @@
-# Linux 独立运行版 0.1.3
+# Linux 独立运行版 0.1.4
 
 支持 x86_64、glibc 2.31 或更新的 Linux，例如 Debian 11+、Ubuntu 20.04+。不支持 ARM、Alpine/musl 或 Windows。内置 Python、pyslang 12.1.0、后端及两个前端，无需安装 Python、Node.js、slang 或 Vivado。
 
 ## 下载、解压、启动
 
 ```sh
-curl -fL https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.3.tar.gz -o verilinx-linux-x86_64-0.1.3.tar.gz
-tar -xzf verilinx-linux-x86_64-0.1.3.tar.gz
+curl -fL https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-linux-x86_64-0.1.4.tar.gz -o verilinx-linux-x86_64-0.1.4.tar.gz
+tar -xzf verilinx-linux-x86_64-0.1.4.tar.gz
 cd verilinx-linux-x86_64
 ./verilinx
 ```
@@ -25,15 +25,16 @@ cd verilinx-linux-x86_64
 
 这会实际运行打包的 slang 工作进程，加载六路示例，导出和恢复工程，并检查端口布局和两个前端资源。成功时输出 `"ok": true`，随后退出。
 
-下载目录同时提供 `.sha256` 文件。在下载包所在目录执行 `sha256sum -c verilinx-linux-x86_64-0.1.3.tar.gz.sha256` 可校验完整性。
+下载目录同时提供 `.sha256` 文件。在下载包所在目录执行 `sha256sum -c verilinx-linux-x86_64-0.1.4.tar.gz.sha256` 可校验完整性。
 
 ## 接线和端口布局
 
 1. 点击「载入六路示例」，或导入自己的全量 filelist。
-2. 从输出箭头拖到输入箭头，也可以先点输出、再点输入。一个输入只允许一个驱动；错误会在底部显示原因。
-3. 按 P 或点击「端口布局」，拖动箭头到模块任意一边，按 Esc 退出。普通模式可用 Shift+拖动箭头移动位置。聚焦箭头后用 Shift+方向键沿周界微调。
-4. 输入箭头始终指向模块，输出箭头始终离开模块。移动位置不改变网络，连线端点同步跟随。
-5. 导出顶层 `.sv` 保存工程；下次「打开工程」恢复源文件、网络、位置和端口布局。
+2. 点击输出箭头开始手动布线，移动鼠标预览；每次单击画布放置一个转折点，最后点击输入箭头完成。不会自动生成绕行路径；不放转折点则直接连接两端。接近水平/垂直时轻微吸附，按 Shift 可限制方向。一个输入只允许一个驱动，错误时保留草稿以便重选。
+3. 布线过程中 Backspace 或「撤回」移除上一个点，Esc 或「取消」放弃草稿。选中已有线可拖动转折点、双击线段增加点；Alt+单击或聚焦转折点后 Delete 删除该点。「重画路径」需在原输入端口结束，Esc 保留原路径。
+4. 按 P 或点击「端口布局」，拖动箭头到模块任意一边，按 Esc 退出。普通模式可用 Shift+拖动箭头移动位置。聚焦箭头后用 Shift+方向键沿周界微调。
+5. 输入箭头始终指向模块，输出箭头始终离开模块。移动位置不改变网络，连线端点同步跟随。
+6. 导出顶层 `.sv` 保存工程；下次「打开工程」恢复源文件、网络、位置和端口布局。
 
 ## 框选、删除和对齐
 
@@ -43,7 +44,7 @@ cd verilinx-linux-x86_64
 
 「自动对齐」默认开启，拖动接近其他节点的边缘或中心时显示粉色辅助线并吸附，容差为 7 个屏幕像素，不随缩放改变。多选整体拖动保持相对间距；Alt 可临时关闭吸附。按 Space+拖动平移画布，或关闭「框选」后直接拖动画布。
 
-这些布局操作仅影响主画布，HTML 检视版继续使用表单和下拉框编辑网络。导出的顶层工程包含最终节点位置。
+这些布局操作仅影响主画布，HTML 检视版继续使用表单和下拉框编辑网络，并保留已有走线数据。导出的顶层工程包含模块绝对位置、端口布局、每条连线全部转折点及画布视口。坐标采用工程坐标，不随缩放或平移变化。
 
 ## 发行方式
 

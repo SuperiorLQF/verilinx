@@ -9,6 +9,7 @@
     "src/canvas-state.ts",
     "src/port-layout.ts",
     "src/connections.ts",
-    "src/arrange.ts"
+    "src/arrange.ts",
+    "src/routing.ts"
   ]
 }

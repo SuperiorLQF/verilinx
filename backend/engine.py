@@ -3,6 +3,7 @@ import base64
 import hashlib
 import itertools
 import json
+import math
 import re
 import subprocess
 import sys
@@ -61,6 +62,14 @@ def validate_project(p):
     for e in p['edges']:
         if not isinstance(e,dict) or any(not isinstance(e.get(k),str) for k in ('id','source','target','sourcePort','targetPort')):
             raise ValueError('Invalid connection record')
+        if 'points' in e:
+            points=e['points']
+            if not isinstance(points,list) or len(points)>256:
+                raise ValueError('Connection points must be a list of at most 256 bends')
+            if any(not isinstance(point,dict) or any(type(point.get(axis)) not in (int,float)
+                   or abs(point[axis])>10_000_000 or not math.isfinite(point[axis])
+                   for axis in ('x','y')) for point in points):
+                raise ValueError('Connection bend coordinates must be finite numbers within +/-10000000')
 
 
 def safe_path(root, name):
