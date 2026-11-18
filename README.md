@@ -1,5 +1,7 @@
 # Verilinx
 
+[直接下载包含前端的完整 Demo ZIP](https://raw.githubusercontent.com/SuperiorLQF/verilinx/main/downloads/verilinx-demo.zip)
+
 基于 slang 的 SystemVerilog 模块连接 demo。单入口 filelist、顶层参数、generate、信号拼拆，以及「顶层文件即工程」。
 
 ## 启动
