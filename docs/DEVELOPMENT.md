@@ -20,7 +20,7 @@
 | `backend/engine.py` | 参数规范化、两阶段分析、图检查、RTL、工程编解码 |
 | `backend/slang_worker.py` | 隔离的 pyslang Driver，唯一 HDL 语义执行层 |
 | `frontend/src/` | TypeScript / React / React Flow 画布 |
-| `examples/` | 六路 generate、宏边界及数组模块 |
+| `demo/example001/` | LED 闪灯示例 RTL 与 filelist |
 | `tests/test_engine.py` | 引擎和 HTTP 回归 |
 | `scripts/bundle.py` | 移动端上传用 JSON 文件包 |
 
@@ -174,7 +174,7 @@ endmodule
 | --- | --- | --- |
 | GET `/api/health` | 无 | 健康状态、slang 版本 |
 | POST `/api/import` | filelist、files 或 directory，可选 env | 新 project |
-| GET `/api/demo` | 无 | 六路示例 |
+| GET `/api/demo` | 无 | example001 LED 闪灯工程 |
 | POST `/api/component` | project、node | 校验适配器并返回节点 |
 | POST `/api/parameters` | project | 顶层参数检查 |
 | POST `/api/instance` | project、node | 求值并分析后的 node |
@@ -213,10 +213,10 @@ npm --prefix frontend run build
 
 人工验收：
 
-1. 载入六路示例，确认画布节点和边。
-2. 拖入默认模块，不弹窗；双击设置参数及实例名。
+1. 载入 LED 闪灯示例，确认画布节点和边。
+2. 打开 [六路 generate 回归工程](../artifacts/verilinx_top.sv)。拖入默认模块，不弹窗；双击设置参数及实例名。
 3. 修改 WIDTH，端口刷新；已有不兼容连接明确报错。
-4. generate 叠放/展开后网络不变；lane 可单独连接。
+4. 在网页编辑器切换 generate 的叠放和展开，确认网络保持一致且 lane 可单独连接。
 5. 同接 aggregate/lane，检查必须拒绝重叠。
 6. 配置 split/concat 的端口次序，核对 RTL 位序。
 7. 导出后重新打开顶层文件，比较源码和设计数据。

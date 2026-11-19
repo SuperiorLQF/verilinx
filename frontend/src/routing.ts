@@ -46,11 +46,20 @@ export function orthogonalPoints(start:Point,points:Point[],end:Point,sourceSide
       else push({x:end.x,y:last.y});
     }
   }
-  // Avoid endpoint duplicates without rounding away an exact port coordinate.
-  const clean:Point[]=[];let prev=start;
-  for(const p of result)if(!samePoint(prev,p)){clean.push(p);prev=p;}
-  if(clean.length&&samePoint(clean.at(-1)!,end))clean.pop();
-  return clean;
+  // Keep collinear waypoints that continue forward. Drop a tip when the
+  // next segment retraces it, including when the target lies on that segment.
+  const clean:Point[]=[start];
+  for(const p of [...result,end]) {
+    while(clean.length>1) {
+      const a=clean.at(-2)!,b=clean.at(-1)!;
+      const reversesX=Math.abs(a.y-b.y)<EPS&&Math.abs(b.y-p.y)<EPS&&(b.x-a.x)*(p.x-b.x)<0;
+      const reversesY=Math.abs(a.x-b.x)<EPS&&Math.abs(b.x-p.x)<EPS&&(b.y-a.y)*(p.y-b.y)<0;
+      if(!reversesX&&!reversesY)break;
+      clean.pop();
+    }
+    if(!samePoint(clean.at(-1)!,p))clean.push(p);
+  }
+  return clean.slice(1,-1);
 }
 /** Drag a corner by propagating the affected row/column, keeping endpoints fixed. */
 export function moveBend(start:Point,points:Point[],end:Point,index:number,desired:Point):Point[] {

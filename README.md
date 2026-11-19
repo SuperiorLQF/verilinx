@@ -10,6 +10,21 @@ Linux 独立包内置 Python 和 slang，无需安装 Python、Node.js 或 Vivad
 
 基于 slang 的 SystemVerilog 模块连接 demo。单入口 filelist、顶层参数、generate、信号拼拆，以及「顶层文件即工程」。
 
+## 原生 Qt 桌面版
+
+在 Linux 上需要 Python 3.12+、CMake、支持 C++17 的编译器和 curl。Qt 窗口直接调用本机 slang。首次运行前构建原生正交布线库 libavoid，脚本会下载固定版本并校验源码。
+
+```sh
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements-desktop.txt
+./scripts/build_libavoid.sh
+./verilinx-qt --demo
+```
+
+日常使用运行 `./verilinx-qt`，也可以传入已有的顶层工程路径。在画布上单击输出箭头开始布线，单击空白处放置转折点，再单击输入箭头。连线以正交路径自动绕开模块，并在移动模块时更新路径。Qt 会在模块之间预留至少 48 个画布单位作为走线通道。打开间距不足的旧工程时会调整节点位置，导出后保存。拖动节点时，自动布线的端口在接近同一水平线或垂直线时会吸附。按住 Alt 可自由拖动。按住 Shift 时，鼠标附近可拖动的端口会变橙。拖动时，端口箭头、端口名和位宽会参与避让，端口会贴到最近的可用位置。中键拖动可平移画布。Qt 和网页使用同一种 `.sv` 工程文件。
+
+若 Linux 上的 Qt 报告 XCB 插件缺少 `libxcb-cursor.so.0`，在 Ubuntu 或 Debian 上安装系统包 `libxcb-cursor0`。
+
 ## 克隆源码与开发
 
 经常修改代码请克隆 **main** 分支。需要 Git、Python 3.12+、Node.js 20.19+ 和 npm。以下以 Linux 为例：
@@ -46,14 +61,14 @@ Git 不跟踪 frontend/dist。要用 3000 单端口运行构建版，先执行 `
 
 完整的 HTTPS/SSH 克隆、跳过发行包的精简克隆、更新合并和 ZIP 迁移步骤见 [源码开发指南](docs/SOURCE_DEVELOPMENT.md)。`linux-release` 仅含发行包，开发请选择 `main`。
 
-## 先试六路示例
+## 先试 LED 闪灯示例
 
-1. 点击「载入六路示例」。
-2. 查看六路 processor generate，切换叠放和展开。
-3. 输出数组同时进入分线器和 48 位向量转换组件；lane 0 对应最高字节。
-4. 点击「检查设计」，查看 slang 诊断和生成 RTL。
-5. 点击「导出顶层」，下载 `verilinx_top.sv`。
-6. 点击「打开工程」，恢复输入源码、嵌套 filelist 原文、参数、组件、网络及布局。
+1. 在 Qt 选择「示例 → LED 闪灯示例」，或在网页点击「载入 LED 闪灯示例」，查看时钟、低有效复位、计数器和 LED 模块的连接。
+2. 在顶层参数中修改 `PERIOD`，设置 LED 每次翻转所需的时钟周期数。
+3. 点击「检查设计」，查看 slang 诊断和生成的 RTL。
+4. 导出 `example001_top.sv`，然后用「打开工程」恢复源码、参数和布局。
+
+[示例目录](demo/example001/)包含 RTL 和可单独导入的 `project.f`。
 
 导入自己的项目时，选择覆盖所有依赖的目录及一个入口 filelist。允许嵌套 `-f/-F`，路径语义交给 slang。使用相对路径；归档之外的绝对路径依赖会被拒绝。
 

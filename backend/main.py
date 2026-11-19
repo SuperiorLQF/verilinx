@@ -123,35 +123,46 @@ def import_files(req: ImportRequest):
 
 @app.get('/api/demo')
 def demo():
-    p = import_files(ImportRequest(directory=str(BASE/'examples')))
-    def sh(w,lanes=0):
-        return {'packed':[[w-1,0]] if w>1 else [],'unpacked':[[0,lanes-1]] if lanes else [],'atom_width':1,'signed':False}
-    def port(name,shape,role):return {'name':name,'shape':shape,'role':role}
-    n = {'id':'processor','kind':'module','name':'U_processor_0','module':'processor','overrides':{'WIDTH':'WIDTH'},
-         'count':'LANES','view':'stacked','position':{'x':400,'y':180}}
-    instance(p,n)
-    p['nodes'] = [
-        n,
-        {'id':'split','kind':'split','name':'lane_split','ports':[port('in',sh(8,6),'target')]+[port('lane'+str(i),sh(8),'source') for i in range(6)],'position':{'x':750,'y':100}},
-        {'id':'reshape','kind':'reshape','name':'pack_to_vector','ports':[port('in',sh(8,6),'target'),port('out',sh(48),'source')],'position':{'x':750,'y':470}},
-        {'id':'bus','kind':'output','name':'data_bus','ports':[port('in',sh(48),'target')],'position':{'x':1060,'y':480}},
-        {'id':'din','kind':'input','name':'data_in','ports':[port('out',sh(8,6),'source')],'position':{'x':50,'y':380}},
-        {'id':'clocks','kind':'reshape','name':'clock_lanes','ports':[port('in',sh(6),'target'),port('out',sh(1,6),'source')],'position':{'x':220,'y':-150}},
-        {'id':'clock_const','kind':'constant','name':'clock_ties','expression':"6'b111111",'ports':[port('out',sh(6),'source')],'position':{'x':-30,'y':-150}},
-        {'id':'resets','kind':'reshape','name':'reset_lanes','ports':[port('in',sh(6),'target'),port('out',sh(1,6),'source')],'position':{'x':220,'y':620}},
-        {'id':'reset_const','kind':'constant','name':'reset_ties','expression':"6'b111111",'ports':[port('out',sh(6),'source')],'position':{'x':-30,'y':620}}
+    project = import_files(ImportRequest(directory=str(BASE / 'demo' / 'example001')))
+    project['name'] = 'example001_top'
+    project['parameters'] = 'parameter int PERIOD = 25_000_000'
+
+    for name, kind, x, y in (
+        ('clk', 'input', 0, -65),
+        ('rst_n', 'input', 0, 335),
+        ('led_out', 'output', 1130, 120),
+    ):
+        source = kind == 'input'
+        project['nodes'].append({
+            'id': name, 'name': name, 'kind': kind, 'position': {'x': x, 'y': y},
+            'ports': [{'name': 'out' if source else 'in', 'role': 'source' if source else 'target',
+                       'shape': {'packed': [], 'unpacked': [], 'atom_width': 1}}],
+        })
+    for name, x, overrides in (
+        ('counter', 380, {'PERIOD': 'PERIOD'}),
+        ('led', 770, {}),
+    ):
+        node = {
+            'id': name, 'kind': 'module', 'name': f'U_{name}', 'module': name,
+            'overrides': overrides, 'count': '1', 'position': {'x': x, 'y': 120},
+            'portLayout': {'clk': {'side': 'top', 'offset': .45},
+                           'rst_n': {'side': 'bottom', 'offset': .45}},
+        }
+        project['nodes'].append(instance(project, node))
+
+    project['edges'] = [
+        {'id': f'{source}_{source_port}_{target}_{target_port}', 'source': source,
+         'sourcePort': source_port, 'target': target, 'targetPort': target_port}
+        for source, source_port, target, target_port in (
+            ('clk', 'out', 'counter', 'clk'),
+            ('clk', 'out', 'led', 'clk'),
+            ('rst_n', 'out', 'counter', 'rst_n'),
+            ('rst_n', 'out', 'led', 'rst_n'),
+            ('counter', 'tick', 'led', 'tick'),
+            ('led', 'led_out', 'led_out', 'in'),
+        )
     ]
-    # Keep the demo meaningful: clock/reset are array ports for six generated instances.
-    p['nodes'] = [x for x in p['nodes'] if x['id'] not in ('clock_const','reset_const')]
-    p['nodes'] += [
-        {'id':'clock_const','kind':'input','name':'clk_lanes','ports':[port('out',sh(6),'source')],'position':{'x':-30,'y':-150}},
-        {'id':'reset_const','kind':'input','name':'rst_lanes','ports':[port('out',sh(6),'source')],'position':{'x':-30,'y':620}}]
-    def edge(s,sp,t,tp):return {'id':f'{s}_{sp}_{t}_{tp}','source':s,'sourcePort':sp,'target':t,'targetPort':tp}
-    p['edges'] = [edge('din','out','processor','data_in'),edge('processor','data_out','split','in'),
-                  edge('processor','data_out','reshape','in'),edge('reshape','out','bus','in'),
-                  edge('clock_const','out','clocks','in'),edge('clocks','out','processor','clk'),
-                  edge('reset_const','out','resets','in'),edge('resets','out','processor','rst_n')]
-    return p
+    return project
 
 
 @app.post('/api/instance')

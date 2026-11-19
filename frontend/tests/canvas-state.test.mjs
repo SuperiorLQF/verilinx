@@ -48,3 +48,13 @@ test('expand/collapse accepts a new size and deleting a node removes its state',
   assert.equal(collapsed[0].measured.height, 900);
   assert.equal(reconcileCanvasNodes([], collapsed, handlers, null).length, 0);
 });
+
+test('domain updates preserve the latest canvas selection until a new project is loaded', () => {
+  const initial = reconcileCanvasNodes([block], [], handlers, null);
+  const selected = applyNodeChanges([{ id: block.id, type: 'select', selected: true }], initial);
+  const expanded = reconcileCanvasNodes([{ ...block, view: 'expanded' }], selected, handlers, undefined);
+  assert.equal(expanded[0].selected, true);
+  const deselected = applyNodeChanges([{ id: block.id, type: 'select', selected: false }], expanded);
+  assert.equal(reconcileCanvasNodes([block], deselected, handlers, undefined)[0].selected, false);
+  assert.equal(reconcileCanvasNodes([block], selected, handlers, null, true)[0].selected, false);
+});

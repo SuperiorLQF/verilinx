@@ -222,7 +222,7 @@ def declaration(name, sh, kind='logic'):
         packed += f'[{width-1}:0]'
     unpacked = ''.join(f' [{a}:{b}]' for a, b in sh.get('unpacked', []))
     signed = ' signed' if sh.get('signed') else ''
-    return f'{kind}{signed} {packed} {name}{unpacked}'
+    return f'{kind}{signed}{(" " + packed) if packed else ""} {name}{unpacked}'
 
 
 def endpoint_shape(node, port):
@@ -271,25 +271,40 @@ def compile_project(project):
             io.append(declaration(n['name'], n['ports'][0]['shape'], n['kind'] + ' wire'))
     lines[-1] += ' (\n' + ',\n'.join('    ' + x for x in io) + '\n);'
     lines.append(declarations(project.get('parameters', '')))
+    declaration_start = len(lines)
+    wires = {}
     endpoint = {}
+    top_outputs = {n['id']: n['name'] for n in nodes if n['kind'] == 'output'}
+    shared_outputs = {
+        (edge['source'], edge['sourcePort'])
+        for edge in project.get('edges', [])
+        if top_outputs.get(edge['target']) == edge['sourcePort']
+        and by_id.get(edge['source'], {}).get('kind') == 'module'
+    }
     # Output port names are the public net names. Reserve the complete top-level
     # namespace first, then give source endpoints priority over input adapters.
     used_signals = names | set(re.findall(r'[a-zA-Z_][a-zA-Z0-9_$]*', project.get('parameters', '')))
     used_signals |= {f"g_{n['name']}" for n in nodes if n['kind'] == 'module'}
+    preferred_outputs = {
+        p['name'] for n in nodes if n['kind'] == 'module' and n['analysis'].get('homogeneous', True)
+        for p in n['analysis']['ports'] if p['direction'] == 'Out'
+    }
     signal_names = {}
 
     def allocate_signal(n, port, role, lane=None):
         base = port if role == 'source' else f"{n['name']}_{port}"
         if lane is not None:
             base += f'_lane{lane}'
-        base = re.sub('_+', '_', base)
+        if role != 'source' or lane is not None:
+            base = re.sub('_+', '_', base)
         candidate = base
-        if candidate in used_signals:
-            candidate = re.sub('_+', '_', f"{n['name']}_{base}")
-        stem, suffix = candidate, 2
-        while candidate in used_signals:
-            candidate = f'{stem.rstrip("_")}_{suffix}'
-            suffix += 1
+        preferred = n['kind'] == 'module' and role == 'source' and lane is None
+        if candidate in used_signals or (not preferred and candidate in preferred_outputs):
+            candidate = stem = re.sub('_+', '_', f"{n['name']}_{base}")
+            suffix = 2
+            while candidate in used_signals or candidate in preferred_outputs:
+                candidate = f'{stem.rstrip("_")}_{suffix}'
+                suffix += 1
         used_signals.add(candidate)
         return candidate
 
@@ -302,7 +317,11 @@ def compile_project(project):
                     continue
                 lanes = range(n['analysis']['count']) if n['kind'] == 'module' and not n['analysis'].get('homogeneous', True) else [None]
                 for lane in lanes:
-                    signal_names[(n['id'], p['name'], lane)] = allocate_signal(n, p['name'], role, lane)
+                    port = p['name']
+                    signal_names[(n['id'], port, lane)] = (
+                        port if role == 'source' and lane is None and (n['id'], port) in shared_outputs
+                        else allocate_signal(n, port, role, lane)
+                    )
     total_bits = 0
     for idx, n in enumerate(nodes):
         portnames = ([p['name'] for p in n['analysis']['ports']] if n['kind']=='module'
@@ -317,7 +336,7 @@ def compile_project(project):
                     vp = next(p for p in variant['ports'] if p['name']==port)
                     lane_sig = signal_names[(n['id'], port, lane)]
                     endpoint[(n['id'],port+'@'+str(lane))] = (lane_sig,vp['shape'],role)
-                    lines.append(declaration(lane_sig,vp['shape'],'wire')+';')
+                    wires[lane_sig] = declaration(lane_sig, vp['shape'], 'wire') + ';'
                 continue
             validate_shape(sh)
             total_bits += bits(sh)
@@ -331,8 +350,8 @@ def compile_project(project):
                 raise ValueError('Signal width must be 1..65536 bits')
             sig = n['name'] if n['kind'] in ('input','output') else signal_names[(n['id'], port, None)]
             endpoint[(n['id'], port)] = (sig, sh, role)
-            if n['kind'] not in ('input','output'):
-                lines.append(declaration(sig, sh, 'wire') + ';')
+            if n['kind'] not in ('input','output') and (n['id'], port) not in shared_outputs:
+                wires[sig] = declaration(sig, sh, 'wire') + ';'
     # Lane aliases share physical signal bits with the aggregate handle.
     for n in nodes:
         if n['kind']=='module' and n['analysis']['count']>1 and n['analysis'].get('homogeneous',True):
@@ -342,6 +361,7 @@ def compile_project(project):
                     lane_sh = dict(sh,unpacked=sh['unpacked'][1:])
                     endpoint[(n['id'],p['name']+'@'+str(lane))] = (sig+f'[{lane}]',lane_sh,role)
     driven = set()
+    direct_inputs = {}
     def assign_bits(dst, src):
         if len(dst) != len(src):
             raise ValueError(f'Width mismatch: {len(src)} source bits → {len(dst)} target bits')
@@ -359,27 +379,48 @@ def compile_project(project):
         if sh.get('packed',[]) != th.get('packed',[]) or sh.get('unpacked',[]) != th.get('unpacked',[]) or sh.get('atom_width',1) != th.get('atom_width',1):
             raise ValueError('Signal shape mismatch; insert a split / concat / reshape component')
         driven |= target_bits
-        assign_bits(atoms(ts,th),atoms(ss,sh))
+        if by_id[tk[0]]['kind'] == 'module' and ts in wires:
+            # A complete input can connect to its driver. Partial lane wiring
+            # still uses an assembled net with an assignment for each lane.
+            direct_inputs[ts] = ss
+            del wires[ts]
+        elif ts != ss:
+            assign_bits(atoms(ts,th),atoms(ss,sh))
+    lines[declaration_start:declaration_start] = wires.values()
+
+    def emit_instance(node, ports, indent=''):
+        prefix = indent + node['module']
+        overrides = node.get('overrides', {})
+        if overrides:
+            lines.append(prefix + ' #(')
+            lines.append(',\n'.join(f'{indent}    .{name}({value})' for name, value in overrides.items()))
+            prefix = indent + ')'
+        lines.append(f"{prefix} {node['name']} (")
+        connections = ',\n'.join(f'{indent}    .{port}({signal})' for port, signal in ports)
+        if connections:
+            lines.append(connections)
+        lines.append(indent + ');')
+
     warnings = []
     for n in nodes:
         eps = {p: v for (nid,p),v in endpoint.items() if nid == n['id'] and ('@' not in p or not n.get('analysis',{}).get('homogeneous',True))}
         if n['kind'] == 'module':
-            cfg = ', '.join(f'.{k}({v})' for k,v in n.get('overrides',{}).items())
-            prefix = n['module'] + (f' #({cfg})' if cfg else '')
-            def connections(index=''):
-                return ', '.join(f'.{p}({sig}{index})' for p,(sig,_,_) in eps.items())
             if n['analysis']['count'] > 1 or n.get('count','1').strip()!='1':
                 count_expr = n.get('count','1')
                 lines.append(f"for (genvar i=0; i<({count_expr}); i++) begin : g_{n['name']}")
                 if n['analysis'].get('homogeneous',True):
-                    lines.append(f"    {prefix} {n['name']} ({connections('[i]' if n['analysis']['count']>1 else '')});")
+                    index = '[i]' if n['analysis']['count'] > 1 else ''
+                    emit_instance(n, ((p, direct_inputs.get(sig, sig) + index) for p, (sig, _, _) in eps.items()), '    ')
                 else:
                     for lane in range(n['analysis']['count']):
-                        conn = ', '.join(f'.{p.split("@")[0]}({sig})' for p,(sig,_,_) in eps.items() if p.endswith('@'+str(lane)))
-                        lines.extend([f'    if (i=={lane}) begin : lane_{lane}',f"        {prefix} {n['name']} ({conn});",'    end'])
+                        lines.append(f'    if (i=={lane}) begin : lane_{lane}')
+                        ports = ((p.rsplit('@', 1)[0], direct_inputs.get(sig, sig))
+                                 for p, (sig, _, _) in eps.items() if p.endswith('@' + str(lane)))
+                        emit_instance(n, ports, '        ')
+                        lines.append('    end')
                 lines.append('end')
             else:
-                lines.append(f"{prefix} {n['name']} ({connections()});")
+                emit_instance(n, ((p, direct_inputs.get(sig, sig)) for p, (sig, _, _) in eps.items()))
         elif n['kind'] in ('split','concat','reshape'):
             ins = [atoms(sig,sh) for sig,sh,role in eps.values() if role=='target']
             outs = [atoms(sig,sh) for sig,sh,role in eps.values() if role=='source']

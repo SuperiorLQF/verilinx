@@ -43,7 +43,7 @@ python3.12 -m venv .venv
 1. 匿名请求 `/api/health` 返回 401；`/healthz` 返回 200。
 2. 用完整链接解锁，重定向中不再带密钥；Cookie 带 Secure 和 HttpOnly。
 3. 主画布、静态资源以及 API 请求均成功。
-4. 载入六路示例，执行 `/api/analyze` 和 `/api/export`，由真实 slang 返回结果。
+4. 载入 LED 闪灯示例，执行 `/api/analyze` 和 `/api/export`，由真实 slang 返回结果。
 5. 从导出的顶层恢复工程，再比较输入 filelist、参数和连线。
 6. 在手机浏览器实际执行上述操作。
 

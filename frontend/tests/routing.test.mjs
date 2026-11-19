@@ -24,6 +24,17 @@ test('a larger final offset adds a local elbow and preserves the clicked corner'
  const fixed=orthogonalPoints(s,p,t,'right','left',8);
  assert.deepEqual(fixed,[...p,{x:100,y:160}]);check(s,fixed,t);
 });
+test('finishing halfway up a vertical leg removes the retraced tip',()=>{
+ const start={x:0,y:100},end={x:200,y:65};
+ const fixed=orthogonalPoints(start,[{x:100,y:100},{x:100,y:25}],end,'right','left',8);
+ assert.deepEqual(fixed,[{x:100,y:100},{x:100,y:65}]);
+ assert.deepEqual(orthogonalPoints(start,fixed,end),fixed);
+});
+
+test('finishing at the start of a retraced leg removes that detour',()=>{
+ const start={x:0,y:100},end={x:200,y:100};
+ assert.deepEqual(orthogonalPoints(start,[{x:100,y:100},{x:100,y:25}],end,'right','left',8),[{x:100,y:100}]);
+});
 test('old slanted paths and moved endpoints remain orthogonal and normalization is stable',()=>{
  const sides=['left','right','top','bottom'];
  for(let k=0;k<20;k++)for(const a of sides)for(const b of sides){

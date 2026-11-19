@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+cd -- "$(dirname -- "$0")"
+if [ ! -x .venv/bin/python ]; then
+    printf '%s\n' 'Create .venv with Python 3.12+ and install requirements-desktop.txt.' >&2
+    exit 1
+fi
+if [ ! -r .runtime/libavoid/build/libverilinx_avoid.so ]; then
+    printf '%s\n' 'Build the desktop routing library with ./scripts/build_libavoid.sh.' >&2
+    exit 1
+fi
+if [ -d .runtime/qt-libs ]; then
+    export LD_LIBRARY_PATH="$(pwd)/.runtime/qt-libs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+fi
+exec .venv/bin/python -m desktop "$@"

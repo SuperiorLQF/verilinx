@@ -9,9 +9,9 @@ from backend.engine import (instance, evaluate, encode_project, decode_project,
                             compile_project, worker, atoms, declarations, safe_path)
 
 
-@pytest.fixture(scope='module')
-def example():
-    return demo()
+@pytest.fixture
+def example(six_lane_project):
+    return six_lane_project
 
 
 def simple(files, entry='project.f'):
@@ -72,7 +72,7 @@ def test_unknown_override_and_bad_parameter_error(example):
         evaluate(p,[])
 
 
-def test_full_demo_export_and_lossless_restore(example):
+def test_six_lane_export_and_lossless_restore(example):
     req=ProjectRequest(project=copy.deepcopy(example))
     result=export(req)
     assert 'for (genvar i=0; i<(LANES)' in result['text']
@@ -83,6 +83,19 @@ def test_full_demo_export_and_lossless_restore(example):
     assert p['inputs']==example['inputs']
     assert not analyze(ProjectRequest(project=p))['warnings']
     assert worker(p,'validate',text=result['text'],top=p['name'])['ok']
+
+
+def test_counter_led_demo_exports_with_its_source_files():
+    project = demo()
+    assert project['name'] == 'example001_top'
+    assert set(project['inputs']['files']) == {'project.f', 'counter.v', 'led.v'}
+    result = export(ProjectRequest(project=project))
+    rtl = result['text'].split('// verilinx prj begin')[0]
+    assert 'wire tick;' in rtl
+    assert 'counter #(\n    .PERIOD(PERIOD)\n) U_counter (\n    .clk(clk),\n    .rst_n(rst_n),\n    .tick(tick)\n);' in rtl
+    assert 'led U_led (\n    .tick(tick),\n    .clk(clk),\n    .rst_n(rst_n),\n    .led_out(led_out)\n);' in rtl
+    assert 'assign ' not in rtl
+    assert decode_project(result['text'])['inputs'] == project['inputs']
 
 
 def test_corrupt_project_checksum_and_size(example):
@@ -279,3 +292,22 @@ def test_output_port_net_names_and_namespace_collisions():
     rtl, _ = compile_project(p)
     assert '.q(U_a_q)' in rtl
     assert worker(p, 'validate', text=rtl, top=p['name'])['ok']
+
+
+def test_generate_input_wired_by_lane_keeps_its_array():
+    project = simple({'project.f': 'm.sv', 'm.sv': 'module m(input wire a); endmodule'})
+    project['nodes'] = [dict(node(), count='2')]
+    shape = {'packed': [], 'unpacked': [], 'atom_width': 1}
+    for lane in range(2):
+        name = f'a{lane}'
+        project['nodes'].append({'id': name, 'kind': 'input', 'name': name,
+                                 'ports': [{'name': 'out', 'role': 'source', 'shape': shape}]})
+        project['edges'].append({'id': name, 'source': name, 'sourcePort': 'out',
+                                 'target': 'a', 'targetPort': f'a@{lane}'})
+    rtl, warnings = compile_project(project)
+    assert not warnings
+    assert 'wire U_m_0_a [0:1];' in rtl
+    assert 'assign U_m_0_a[0] = a0;' in rtl
+    assert 'assign U_m_0_a[1] = a1;' in rtl
+    assert '    m U_m_0 (\n        .a(U_m_0_a[i])\n    );' in rtl
+    assert worker(project, 'validate', text=rtl, top=project['name'])['ok']

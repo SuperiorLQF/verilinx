@@ -27,7 +27,7 @@ git clone --branch main git@github.com:SuperiorLQF/verilinx.git
 ```sh
 git clone --filter=blob:none --sparse --branch main https://github.com/SuperiorLQF/verilinx.git
 cd verilinx
-git sparse-checkout set backend frontend examples scripts tests docs
+git sparse-checkout set backend frontend demo artifacts scripts tests docs
 git switch -c dev/my-work
 ```
 
@@ -117,7 +117,8 @@ npm --prefix frontend run build
 | --- | --- |
 | frontend/src | React 主画布、端口、手动布线与布局 |
 | backend | FastAPI、slang 分析、RTL 生成和工程编码 |
-| examples | 示例 RTL 与嵌套 filelist |
+| demo | 内置示例的 RTL 与 filelist |
+| artifacts | 已保存的六路 generate 回归工程 |
 | tests | 后端回归 |
 | docs/DEVELOPMENT.md | 架构、数据格式和实现边界 |
 
